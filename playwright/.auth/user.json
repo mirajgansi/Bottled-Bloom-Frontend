@@ -1,0 +1,25 @@
+{
+  "cookies": [
+    {
+      "name": "user_data",
+      "value": "%7B%22_id%22%3A%2269a666d3d46ae132f872fa6f%22%2C%22email%22%3A%22testuser%40example.com%22%2C%22password%22%3A%22%242b%2410%24qi4r%2F4uozRdNL9xav8M9KeJpC3J%2FkaabWCxY%2Fc1P5oqcsjet0bRXG%22%2C%22username%22%3A%22Test%20User%22%2C%22role%22%3A%22user%22%2C%22fcmToken%22%3Anull%2C%22passwordResetCode%22%3Anull%2C%22passwordResetExpires%22%3Anull%2C%22createdAt%22%3A%222026-03-03T04%3A42%3A59.181Z%22%2C%22updatedAt%22%3A%222026-03-03T04%3A42%3A59.181Z%22%2C%22__v%22%3A0%7D",
+      "domain": "localhost",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "auth_token",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5YTY2NmQzZDQ2YWUxMzJmODcyZmE2ZiIsImVtYWlsIjoidGVzdHVzZXJAZXhhbXBsZS5jb20iLCJ1c2VybmFtZSI6IlRlc3QgVXNlciIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzcyNjA2MTM1LCJleHAiOjE3NzUxOTgxMzV9.YrLbtriCC3CoLEvoJKD8oxS5dfFXeExbuaqUn9_q1u8",
+      "domain": "localhost",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    }
+  ],
+  "origins": []
+}
