@@ -60,12 +60,11 @@ export default function AvatarMenu({
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className="
-            h-10 w-10 rounded-full overflow-hidden
-            flex items-center justify-center
-            transition hover:scale-105
-            focus:outline-none focus:ring-2 focus:ring-black/20
-          "
+          className="h-10 w-10 rounded-full overflow-hidden flex items-center justify-center transition-transform hover:scale-105 focus:outline-none"
+          style={{
+            border: "1px solid var(--border-strong)",
+            boxShadow: "0 0 0 2px transparent",
+          }}
           aria-label="Open user menu"
         >
           {image ? (
@@ -77,30 +76,55 @@ export default function AvatarMenu({
               className="h-full w-full object-cover"
             />
           ) : (
-            <div className="h-full w-full bg-gray-900 text-white font-bold text-sm flex items-center justify-center">
+            <div
+              className="h-full w-full font-bold text-sm flex items-center justify-center"
+              style={{ backgroundColor: "var(--gold-primary)", color: "var(--text-on-gold)" }}
+            >
               {initials(displayName)}
             </div>
           )}
         </button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="end" className="w-44 rounded-xl shadow-lg">
+      <DropdownMenuContent
+        align="end"
+        className="w-44 rounded-xl border-none"
+        style={{
+          backgroundColor: "var(--bg-elevated)",
+          boxShadow: "var(--shadow-deep)",
+        }}
+      >
         <div className="px-3 py-2">
-          <div className="text-sm font-semibold text-gray-900 truncate">
+          <div
+            className="text-sm font-semibold truncate"
+            style={{ color: "var(--text-primary)" }}
+          >
             {displayName}
           </div>
           {roleLabel && (
-            <div className="text-xs text-gray-500">{roleLabel}</div>
+            <div className="text-xs" style={{ color: "var(--text-secondary)" }}>
+              {roleLabel}
+            </div>
           )}
         </div>
 
-        <DropdownMenuSeparator />
+        <DropdownMenuSeparator style={{ backgroundColor: "var(--border-subtle)" }} />
 
-        <DropdownMenuItem onClick={() => router.push(profileHref)}>
+        <DropdownMenuItem
+          onClick={() => router.push(profileHref)}
+          className="cursor-pointer focus:bg-[var(--bg-secondary)]"
+          style={{ color: "var(--text-primary)" }}
+        >
           Profile
         </DropdownMenuItem>
 
-        <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={handleLogout}
+          className="cursor-pointer focus:bg-[var(--bg-secondary)]"
+          style={{ color: "#E57373" }}
+        >
+          Logout
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
