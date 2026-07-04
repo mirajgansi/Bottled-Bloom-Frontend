@@ -8,7 +8,6 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import AnimatedTextField from "./AnimatedTextFeild"; // adjust path
-import { watch } from "fs/promises";
 
 const resetSchema = z
   .object({
@@ -34,7 +33,7 @@ export default function ResetPasswordPage() {
     handleSubmit,
     setValue,
     setError,
-     watch,
+    watch,
     formState: { errors },
   } = useForm<ResetData>({
     resolver: zodResolver(resetSchema),
@@ -75,26 +74,42 @@ export default function ResetPasswordPage() {
   const onInvalid = () => {
     toast.error("Please fix the validation errors");
   };
-const emailValue = watch("email");
+
+  const emailValue = watch("email");
+
   return (
-    <div className="flex justify-center px-4">
-      <div className="w-full max-w-md rounded-2xl bg-white shadow p-6">
-        <h1 className="text-2xl font-semibold">Set new password</h1>
+    <div className="min-h-screen flex justify-center items-center px-4" style={{ backgroundColor: "var(--bg-primary)" }}>
+      <div
+        className="w-full max-w-md rounded-2xl p-6"
+        style={{
+          backgroundColor: "var(--bg-secondary)",
+          border: "1px solid var(--border-subtle)",
+          boxShadow: "var(--shadow-deep)",
+        }}
+      >
+        <h1
+          className="text-2xl font-semibold"
+          style={{ color: "var(--text-primary)", fontFamily: "Georgia, serif" }}
+        >
+          Set new password
+        </h1>
 
         <form onSubmit={handleSubmit(submit, onInvalid)} className="mt-6 space-y-4">
-          {/* Email (hidden or readonly if you want) */}
+          {/* Email context line */}
           <div className="space-y-1">
-           <p className="mt-1 text-sm text-gray-600">
-            Set new password for{" "}
-            <span className="font-semibold text-gray-900">{emailValue || "—"}</span>
-          </p>
+            <p className="mt-1 text-sm" style={{ color: "var(--text-secondary)" }}>
+              Set new password for{" "}
+              <span className="font-semibold" style={{ color: "var(--gold-primary)" }}>
+                {emailValue || "—"}
+              </span>
+            </p>
           </div>
-
-         
 
           {/* New password */}
           <div className="space-y-1">
-            <label className="text-sm font-medium">New password</label>
+            <label className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
+              New password
+            </label>
             <AnimatedTextField
               id="newPassword"
               type="password"
@@ -107,7 +122,9 @@ const emailValue = watch("email");
 
           {/* Confirm */}
           <div className="space-y-1">
-            <label className="text-sm font-medium">Confirm password</label>
+            <label className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
+              Confirm password
+            </label>
             <AnimatedTextField
               id="confirm"
               type="password"
@@ -119,17 +136,24 @@ const emailValue = watch("email");
           </div>
 
           <button
-            className="w-full rounded-xl bg-[#4CAF50] text-white py-2.5 font-medium disabled:opacity-60"
+            className="w-full rounded-full py-2.5 font-semibold tracking-wide transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100"
+            style={{
+              backgroundColor: "var(--gold-primary)",
+              color: "var(--text-on-gold)",
+              boxShadow: "0 10px 30px -8px rgba(201, 161, 93, 0.4)",
+            }}
             type="submit"
+            disabled={pending}
           >
-          Reset password
+            {pending ? "Resetting..." : "Reset password"}
           </button>
         </form>
 
-        <div className="mt-4 text-sm text-gray-600">
+        <div className="mt-4 text-sm" style={{ color: "var(--text-secondary)" }}>
           Want to re-enter code?{" "}
           <a
-            className="underline"
+            className="underline transition-colors"
+            style={{ color: "var(--gold-primary)" }}
             href={`/reset-code-password?email=${encodeURIComponent(searchParams.get("email") || "")}`}
           >
             Back

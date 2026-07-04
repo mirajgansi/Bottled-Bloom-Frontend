@@ -7,53 +7,76 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen flex">
-            <div className="flex-1 relative min-h-screen hidden md:block">
+    <div className="min-h-screen flex" style={{ backgroundColor: "var(--bg-primary)" }}>
+      {/* Left decorative panel — hidden on mobile */}
+      <div className="flex-1 relative min-h-screen hidden md:block overflow-hidden">
         <Image
-          src="/grocery_image.png"
-          alt="grocery"
+          src="/perfume.jpg"
+          alt="Bottled Bloom"
           fill
           className="object-cover"
           priority
         />
-        <div className="absolute inset-0 bg-black/40" />
-        <div className="absolute inset-0 flex items-end px-20 pb-20">
-          <div className="text-white max-w-lg flex flex-col items-center text-center drop-shadow-2xl">
-  <h1 className="text-4xl font-bold mb-4">
-    Welcome to Click Shop
-  </h1>
-  <p className="text-2xl leading-relaxed text-white/90 ">
-    Find all your daily needs here at low prices and more
-    complete, hassle-free, and faster delivery.
-  </p>
-</div>
+        {/* dark gold gradient overlay so the image blends with the theme */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(135deg, rgba(15,11,8,0.75) 0%, rgba(15,11,8,0.35) 50%, rgba(15,11,8,0.75) 100%)",
+          }}
+        />
+        <div className="absolute bottom-12 left-12 z-10">
+          <p
+            className="text-xs tracking-[0.3em] uppercase mb-2"
+            style={{ color: "var(--gold-primary)" }}
+          >
+            Bottled Bloom
+          </p>
+          <p
+            className="text-2xl font-semibold max-w-xs"
+            style={{ color: "var(--text-primary)", fontFamily: "Georgia, serif" }}
+          >
+            Fragrances crafted to be remembered
+          </p>
         </div>
       </div>
 
-      {/* Left side: Auth form */}
+      {/* Form panel — now actually centers its content, both horizontally and vertically */}
       <div
-        className="
-          w-full
-          max-w-lg
-          min-h-screen
-          p-6
-          bg-gradient-to-br
-          from-[#fdfefe] via-[#ffeef4] to-[#eafbf1]
-        "
+        className="w-full md:max-w-lg min-h-screen flex flex-col items-center justify-center p-6 relative"
+        style={{ backgroundColor: "var(--bg-secondary)" }}
       >
-        <div className="flex justify-center mb-6">
-          <Image
-            src="/cookie.jpg"
-            width={80}
-            height={80}
-            alt="Logo"
-            className="rounded-full"
-          />
+        {/* subtle glow behind the logo */}
+        <div
+          className="absolute top-1/4 left-1/2 -translate-x-1/2 w-64 h-64 rounded-full pointer-events-none"
+          style={{
+            background:
+              "radial-gradient(circle, rgba(201,161,93,0.12) 0%, rgba(201,161,93,0) 70%)",
+          }}
+        />
+
+        <div className="w-full max-w-sm flex flex-col items-center relative z-10">
+          <div
+            className="rounded-full overflow-hidden mb-6"
+            style={{
+              border: "1px solid var(--border-strong)",
+              boxShadow: "var(--shadow-glow)",
+            }}
+          >
+            <Image
+              src="/cookie.jpg"
+              width={80}
+              height={80}
+              alt="Logo"
+              className="object-cover"
+            />
+          </div>
+
+          {/* form content (login or signup) gets full width and stays centered */}
+          <div className="w-full">{children}</div>
         </div>
 
-        {children}
-              <ToastContainer position="top-right" autoClose={3000} />
-
+        <ToastContainer position="top-right" autoClose={3000} theme="dark" />
       </div>
     </div>
   );
