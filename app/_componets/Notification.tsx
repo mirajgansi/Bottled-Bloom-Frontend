@@ -175,10 +175,13 @@ export default function NotificationBell({
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
         <button
-          className="relative inline-flex h-10 w-10 items-center justify-center rounded-full hover:bg-gray-100"
+          className="relative inline-flex h-10 w-10 items-center justify-center rounded-full "
           aria-label="Notifications"
         >
-          <Bell className="h-5 w-5 text-gray-600" />
+          <Bell className="relative transition-colors cursor-pointer"
+          style={{ color: "var(--text-secondary)" }}
+          onMouseEnter={(e) => (e.currentTarget.style.color = "var(--gold-primary)")}
+          onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-secondary)")}/>
           {unread > 0 ? (
             <span className="absolute -top-1 -right-1 min-w-4.5 rounded-full bg-red-600 px-1 text-center text-[11px] leading-[18px] text-white">
               {unread > 99 ? "99+" : unread}

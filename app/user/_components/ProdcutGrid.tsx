@@ -120,7 +120,7 @@ export default function ProductsGrid({
       // favorites page: API returns products directly, keep them
       setProducts(safe);
 
-      // ✅ Load favorites map once per mount (like cart), so hearts are correct everywhere
+      // Load favorites map once per mount (like cart), so hearts are correct everywhere
       if (!favLoaded) {
         const favMap = await loadFavoritesMap();
         setFavorites(favMap);
@@ -220,16 +220,24 @@ export default function ProductsGrid({
   const showSkeleton = loading && products.length === 0;
 
   return (
-    <section className="w-full px-6">
+    <section className="w-full px-6" style={{ backgroundColor: "var(--bg-primary)" }}>
       {title && (
         <div className="mb-2">
-          <h2 className="text-2xl font-semibold text-black">{title}</h2>
+          <h2
+            className="text-2xl font-semibold"
+            style={{ color: "var(--text-primary)", fontFamily: "Georgia, serif" }}
+          >
+            {title}
+          </h2>
 
           {mode === "all" && (
-            <p className="mt-1 text-sm text-gray-500">
+            <p className="mt-1 text-sm" style={{ color: "var(--text-secondary)" }}>
               {search ? (
                 <>
-                  Search: <span className="font-medium">{search}</span>
+                  Search:{" "}
+                  <span className="font-medium" style={{ color: "var(--gold-primary)" }}>
+                    {search}
+                  </span>
                 </>
               ) : (
                 "All products"
@@ -237,7 +245,10 @@ export default function ProductsGrid({
               {category !== "all" ? (
                 <>
                   {" "}
-                  • Category: <span className="font-medium">{category}</span>
+                  • Category:{" "}
+                  <span className="font-medium" style={{ color: "var(--gold-primary)" }}>
+                    {category}
+                  </span>
                 </>
               ) : null}
             </p>
@@ -245,7 +256,11 @@ export default function ProductsGrid({
         </div>
       )}
 
-      {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
+      {error && (
+        <p className="mb-4 text-sm" style={{ color: "#E57373" }}>
+          {error}
+        </p>
+      )}
 
       <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {showSkeleton
@@ -262,7 +277,7 @@ export default function ProductsGrid({
                     image={buildImageUrl(p.image)}
                     name={p.name}
                     price={Number(p.price)}
-                    unit={p.unit ?? "per kg"}
+                    unit={p.unit}
                     inStock={p.inStock ?? 0}
                     isFavorite={isFav}
                     onToggleWishlist={() => toggleFavorite(p._id)}
@@ -270,8 +285,16 @@ export default function ProductsGrid({
                   />
 
                   {adding[p._id] && (
-                    <div className="absolute inset-0 grid place-items-center rounded-3xl bg-white/60">
-                      <span className="text-sm font-medium">Adding…</span>
+                    <div
+                      className="absolute inset-0 grid place-items-center rounded-3xl"
+                      style={{ backgroundColor: "rgba(15, 11, 8, 0.7)" }}
+                    >
+                      <span
+                        className="text-sm font-medium"
+                        style={{ color: "var(--gold-primary)" }}
+                      >
+                        Adding…
+                      </span>
                     </div>
                   )}
                 </div>
@@ -280,7 +303,7 @@ export default function ProductsGrid({
       </div>
 
       {!loading && products.length === 0 && (
-        <p className="mt-6 text-center text-sm text-gray-500">
+        <p className="mt-6 text-center text-sm" style={{ color: "var(--text-secondary)" }}>
           {mode === "favorites"
             ? "No favorite products yet."
             : "No products found."}
@@ -291,17 +314,29 @@ export default function ProductsGrid({
       {mode === "all" && (
         <div className="mt-10 flex items-center justify-center gap-3">
           <button
-            className="rounded-md border px-4 py-2 text-sm disabled:opacity-50"
+            className="rounded-md px-4 py-2 text-sm transition-colors disabled:opacity-50"
+            style={{
+              border: "1px solid var(--border-strong)",
+              color: "var(--text-primary)",
+              backgroundColor: "var(--bg-elevated)",
+            }}
             disabled={page === 1 || loading}
             onClick={() => setPage((p) => Math.max(1, p - 1))}
           >
             Previous
           </button>
 
-          <span className="text-sm">Page {page}</span>
+          <span className="text-sm" style={{ color: "var(--text-secondary)" }}>
+            Page {page}
+          </span>
 
           <button
-            className="rounded-md border px-4 py-2 text-sm disabled:opacity-50"
+            className="rounded-md px-4 py-2 text-sm transition-colors disabled:opacity-50"
+            style={{
+              border: "1px solid var(--border-strong)",
+              color: "var(--text-primary)",
+              backgroundColor: "var(--bg-elevated)",
+            }}
             disabled={loading || products.length < pageSize}
             onClick={() => setPage((p) => p + 1)}
           >

@@ -32,76 +32,92 @@ type CartResponse = {
 };
 
 export default function Actions() {
-const { user, loading } = useAuth(); 
+  const { user, loading } = useAuth();
   const [cartOpen, setCartOpen] = useState(false);
   const [cartCount, setCartCount] = useState(0);
-  const displayName = user?.userName || user?.name || user?.email || "User"; 
+  const displayName = user?.userName || user?.name || user?.email || "User";
 
-const fetchCartCount = async () => {
-  try {
-    const res: CartResponse = await getMyCart();
+  const fetchCartCount = async () => {
+    try {
+      const res: CartResponse = await getMyCart();
 
-    const items: CartItem[] =
-      res?.data?.items || res?.items || res?.data?.data?.items || [];
+      const items: CartItem[] =
+        res?.data?.items || res?.items || res?.data?.data?.items || [];
 
-    setCartCount(items.length);
-  } catch {
-    setCartCount(0);
-  }
-};
-
-useEffect(() => {
-  if (loading) return;
-
-  // initial load
-  fetchCartCount();
-
-  // listen for cart updates
-  const handler = () => fetchCartCount();
-
-  window.addEventListener(CART_UPDATED_EVENT, handler);
-
-  return () => {
-    window.removeEventListener(CART_UPDATED_EVENT, handler);
+      setCartCount(items.length);
+    } catch {
+      setCartCount(0);
+    }
   };
-}, [loading]);
 
+  useEffect(() => {
+    if (loading) return;
+
+    // initial load
+    fetchCartCount();
+
+    // listen for cart updates
+    const handler = () => fetchCartCount();
+
+    window.addEventListener(CART_UPDATED_EVENT, handler);
+
+    return () => {
+      window.removeEventListener(CART_UPDATED_EVENT, handler);
+    };
+  }, [loading]);
 
   return (
     <>
       <div className="flex items-center gap-5">
-        {/* Search */}
-        <Link
-  href="/user/favorites"
-  className="text-gray-600 hover:text-black transition"
-  aria-label="Favorites"
->
-  <Heart size={20} />
-</Link>
         {/* Wishlist */}
-      <div className="flex justify-center xl:justify-end ">
-              {user?._id &&<NotificationBell userId={user._id} role={user.role} />}
-            </div>
+        <Link
+          href="/user/favorites"
+          className="transition-colors"
+          style={{ color: "var(--text-secondary)" }}
+          onMouseEnter={(e) => (e.currentTarget.style.color = "var(--gold-primary)")}
+          onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-secondary)")}
+          aria-label="Favorites"
+        >
+          <Heart size={20} />
+        </Link>
+
+        {/* Notifications */}
+        <div className="flex justify-center xl:justify-end">
+          {user?._id && <NotificationBell userId={user._id} role={user.role} />}
+        </div>
 
         {/* Cart (opens drawer) */}
         <button
           type="button"
           onClick={() => setCartOpen(true)}
-          className="relative text-gray-600 hover:text-black transition cursor-pointer"
+          className="relative transition-colors cursor-pointer"
+          style={{ color: "var(--text-secondary)" }}
+          onMouseEnter={(e) => (e.currentTarget.style.color = "var(--gold-primary)")}
+          onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-secondary)")}
           aria-label="Cart"
         >
           <ShoppingCart size={20} />
 
           {cartCount > 0 && (
-            <span className="absolute -top-2 -right-2 bg-green-500 text-white text-xs min-w-5 h-5 px-1 flex items-center justify-center rounded-full">
+            <span
+              className="absolute -top-2 -right-2 text-xs min-w-5 h-5 px-1 flex items-center justify-center rounded-full font-medium"
+              style={{
+                backgroundColor: "var(--gold-primary)",
+                color: "var(--text-on-gold)",
+              }}
+            >
               {cartCount > 99 ? "99+" : cartCount}
             </span>
           )}
         </button>
 
         {/* User menu */}
-        <AvatarMenu displayName={displayName} roleLabel=""  image={user?.image}  profileHref="/user/profile" />
-        
+        <AvatarMenu
+          displayName={displayName}
+          roleLabel=""
+          image={user?.image}
+          profileHref="/user/profile"
+        />
       </div>
 
       <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} />

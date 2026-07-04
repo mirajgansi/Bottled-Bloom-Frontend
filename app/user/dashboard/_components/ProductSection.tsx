@@ -225,19 +225,32 @@ export default function ProductSection({
   return (
     <section className="w-full py-6">
       <div className="mb-3 flex items-center justify-between">
-        <h2 className="text-lg md:text-xl text-black font-semibold">{title}</h2>
-
+        <h2
+          className="text-lg md:text-xl font-semibold"
+          style={{ color: "var(--text-primary)", fontFamily: "Georgia, serif" }}
+        >
+          {title}
+        </h2>
       </div>
 
-      {error && <p className="mb-3 text-xs text-red-600">{error}</p>}
+      {error && (
+        <p className="mb-3 text-xs" style={{ color: "#E57373" }}>
+          {error}
+        </p>
+      )}
 
       <div className="relative">
         <button
           onClick={goLeft}
           disabled={!canLeft || loading}
-          className={`absolute left-0 top-1/2 -translate-y-1/2 z-10 rounded-full bg-white shadow p-1.5 hover:bg-gray-100 ${
+          className={`absolute left-0 top-1/2 -translate-y-1/2 z-10 rounded-full p-1.5 transition-colors ${
             !canLeft || loading ? "opacity-40 cursor-not-allowed" : ""
           }`}
+          style={{
+            backgroundColor: "var(--bg-elevated)",
+            color: "var(--text-primary)",
+            border: "1px solid var(--border-subtle)",
+          }}
           aria-label="Previous"
         >
           <ChevronLeft size={18} />
@@ -246,9 +259,14 @@ export default function ProductSection({
         <button
           onClick={goRight}
           disabled={!canRight || loading}
-          className={`absolute right-0 top-1/2 -translate-y-1/2 z-10 rounded-full bg-white shadow p-1.5 hover:bg-gray-100 ${
+          className={`absolute right-0 top-1/2 -translate-y-1/2 z-10 rounded-full p-1.5 transition-colors ${
             !canRight || loading ? "opacity-40 cursor-not-allowed" : ""
           }`}
+          style={{
+            backgroundColor: "var(--bg-elevated)",
+            color: "var(--text-primary)",
+            border: "1px solid var(--border-subtle)",
+          }}
           aria-label="Next"
         >
           <ChevronRight size={18} />
@@ -274,15 +292,26 @@ export default function ProductSection({
                     />
 
                     {adding[p._id] && (
-                      <div className="absolute inset-0 grid place-items-center rounded-3xl bg-white/60">
-                        <span className="text-xs font-medium">Adding…</span>
+                      <div
+                        className="absolute inset-0 grid place-items-center rounded-3xl"
+                        style={{ backgroundColor: "rgba(15, 11, 8, 0.7)" }}
+                      >
+                        <span
+                          className="text-xs font-medium"
+                          style={{ color: "var(--gold-primary)" }}
+                        >
+                          Adding…
+                        </span>
                       </div>
                     )}
                   </div>
                 ))}
           </div>
 
-          <div className="mt-3 text-xs text-gray-500 text-center">
+          <div
+            className="mt-3 text-xs text-center"
+            style={{ color: "var(--text-secondary)" }}
+          >
             Page {page} of {totalPages}
           </div>
         </div>

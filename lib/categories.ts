@@ -1,33 +1,40 @@
 export const CATEGORIES = [
   {
-    slug: "meat",
-    label: "Meat & Fish",
-    description: "Fresh meat, poultry, and seafood products",
+    slug: "eau-de-parfum",
+    label: "Eau de Parfum",
+    description:
+      "Long-lasting, high-concentration fragrances for everyday luxury",
   },
   {
-    slug: "oil",
-    label: "Cooking Oil & Ghee",
-    description: "Edible oils, ghee, and cooking fats",
+    slug: "eau-de-toilette",
+    label: "Eau de Toilette",
+    description: "Lighter, fresher fragrances perfect for daily wear",
   },
   {
-    slug: "pulses",
-    label: "Pulses",
-    description: "Lentils, beans, chickpeas, and dals",
+    slug: "attar-oud",
+    label: "Attar & Oud",
+    description:
+      "Traditional alcohol-free attars and rich oud-based fragrances",
   },
   {
-    slug: "bakery",
-    label: "Bakery",
-    description: "Bread, cakes, biscuits, and baked goods",
+    slug: "womens",
+    label: "Women's Fragrance",
+    description: "Floral, fruity, and oriental scents crafted for women",
   },
   {
-    slug: "snacks",
-    label: "Snacks",
-    description: "Chips, namkeen, instant and ready-to-eat snacks",
+    slug: "mens",
+    label: "Men's Fragrance",
+    description: "Woody, spicy, and fresh scents crafted for men",
   },
   {
-    slug: "beverages",
-    label: "Beverages",
-    description: "Soft drinks, juices, tea, coffee, and water",
+    slug: "body-mist",
+    label: "Body Mist",
+    description: "Light, refreshing sprays for everyday use",
+  },
+  {
+    slug: "gift-sets",
+    label: "Gift Sets",
+    description: "Curated fragrance sets and gift boxes for every occasion",
   },
 ] as const;
 
