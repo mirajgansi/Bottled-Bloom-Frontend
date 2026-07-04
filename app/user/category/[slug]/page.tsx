@@ -23,28 +23,38 @@ export default async function CategoryPage({
   const formattedName = formatSlug(slug);
 
   return (
-    <div className="w-full">
+    <div className="w-full min-h-screen" style={{ backgroundColor: "var(--bg-primary)" }}>
       <div className="mx-auto max-w-6xl px-4 sm:px-6 py-8">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-2xl font-semibold text-gray-900">
+          <h1
+            className="text-2xl font-semibold"
+            style={{ color: "var(--text-primary)", fontFamily: "Georgia, serif" }}
+          >
             {formattedName}
           </h1>
 
-          <p className="mt-2 text-sm text-gray-500">
-            Browse our collection of {formattedName.toLowerCase()} products.
+          <p className="mt-2 text-sm" style={{ color: "var(--text-secondary)" }}>
+            Browse our collection of {formattedName.toLowerCase()}.
           </p>
         </div>
 
         {/* Products */}
         {products.length ? (
-<ProductsGrid
-  title="Category Products"
-  mode="prefetched"
-  initialProducts={products}
-/>        ) : (
-          <div className="mt-10 rounded-2xl border bg-white p-8 text-center">
-            <p className="text-gray-500">
+          <ProductsGrid
+            title="Category Products"
+            mode="prefetched"
+            initialProducts={products}
+          />
+        ) : (
+          <div
+            className="mt-10 rounded-2xl p-8 text-center"
+            style={{
+              backgroundColor: "var(--bg-secondary)",
+              border: "1px solid var(--border-subtle)",
+            }}
+          >
+            <p style={{ color: "var(--text-secondary)" }}>
               No products available in {formattedName} at the moment.
             </p>
           </div>

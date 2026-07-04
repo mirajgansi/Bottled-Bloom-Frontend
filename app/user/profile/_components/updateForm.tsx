@@ -96,91 +96,109 @@ export default function UpdateUserForm({ user }: { user: any }) {
   };
 
   const onSubmit = async (data: UpdateUserData) => {
-  try {
-    const formData = new FormData();
+    try {
+      const formData = new FormData();
 
-    // required
-    formData.append("email", data.email);
-    formData.append("username", data.username);
+      // required
+      formData.append("email", data.email);
+      formData.append("username", data.username);
 
-    // optional (only append if not empty)
-    if (data.phoneNumber?.trim()) formData.append("phoneNumber", data.phoneNumber.trim());
-    if (data.location?.trim()) formData.append("location", data.location.trim());
-    if (data.DOB) formData.append("DOB", data.DOB);
-    if (data.gender?.trim()) formData.append("gender", data.gender.trim());
+      // optional (only append if not empty)
+      if (data.phoneNumber?.trim()) formData.append("phoneNumber", data.phoneNumber.trim());
+      if (data.location?.trim()) formData.append("location", data.location.trim());
+      if (data.DOB) formData.append("DOB", data.DOB);
+      if (data.gender?.trim()) formData.append("gender", data.gender.trim());
 
-    if (data.image) formData.append("image", data.image);
+      if (data.image) formData.append("image", data.image);
 
-    const response = await handleUpdateProfile(formData);
+      const response = await handleUpdateProfile(formData);
 
-    if (!response?.success) {
-      toast.error(response?.message || "Update profile failed");
+      if (!response?.success) {
+        toast.error(response?.message || "Update profile failed");
+        return;
+      }
+
+      toast.success("Profile updated successfully");
+      setEditing(false);
+      clearImage();
+
+      reset(
+        {
+          email: data.email,
+          username: data.username,
+          phoneNumber: data.phoneNumber || "",
+          location: data.location || "",
+          DOB: data.DOB || "",
+          gender: data.gender || "",
+        },
+        { keepDirty: false }
+      );
+    } catch (err: any) {
+      toast.error(err?.message || "Profile update failed");
+    }
+  };
+
+  const [deletePassword, setDeletePassword] = useState("");
+  const [deleting, setDeleting] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const { logout, loading } = useAuth();
+
+  const onDeleteAccount = async () => {
+    if (!deletePassword) {
+      toast.error("Please enter your password");
       return;
     }
 
-    toast.success("Profile updated successfully");
-    setEditing(false);
-    clearImage();
+    setDeleting(true);
 
-    reset(
-      {
-        email: data.email,
-        username: data.username,
-        phoneNumber: data.phoneNumber || "",
-        location: data.location || "",
-        DOB: data.DOB || "",
-        gender: data.gender || "",
-      },
-      { keepDirty: false }
-    );
-  } catch (err: any) {
-    toast.error(err?.message || "Profile update failed");
-  }
-};
+    const res = await handleDeleteMe(deletePassword);
+    if (!res.success) {
+      setDeleting(false);
+      toast.error(res.message);
+      return;
+    }
 
-const [deletePassword, setDeletePassword] = useState("");
-const [deleting, setDeleting] = useState(false);
-const [deleteOpen, setDeleteOpen] = useState(false);
-  const { logout, loading } = useAuth();
+    await logout();
 
-const onDeleteAccount = async () => {
-  if (!deletePassword) {
-    toast.error("Please enter your password");
-    return;
-  }
-
-  setDeleting(true);
-
-  const res = await handleDeleteMe(deletePassword);
-  if (!res.success) {
     setDeleting(false);
-    toast.error(res.message);
-    return;
-  }
+    toast.success("Account deleted");
 
-  await logout(); 
-
-  setDeleting(false);
-  toast.success("Account deleted");
-
-  window.location.href = "/login";
-};
-
+    window.location.href = "/login";
+  };
 
   const inputBase =
-    "h-11 w-full rounded-xl border border-black/10 dark:border-white/15 bg-white/70 dark:bg-white/5 px-4 text-sm outline-none focus:border-black/30 dark:focus:border-white/30 disabled:opacity-70 disabled:cursor-not-allowed";
+    "h-11 w-full rounded-xl px-4 text-sm outline-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed";
+  const inputStyle = {
+    backgroundColor: "var(--bg-elevated)",
+    color: "var(--text-primary)",
+    border: "1px solid var(--border-strong)",
+  };
+  const onInputFocus = (e: React.FocusEvent<HTMLInputElement>) =>
+    (e.currentTarget.style.borderColor = "var(--gold-bright)");
+  const onInputBlur = (e: React.FocusEvent<HTMLInputElement>) =>
+    (e.currentTarget.style.borderColor = "var(--border-strong)");
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] px-4 py-10">
+    <div className="min-h-screen px-4 py-10" style={{ backgroundColor: "var(--bg-primary)" }}>
       <div className="mx-auto w-full max-w-4xl">
-        <div className="rounded-3xl bg-white shadow-sm border border-black/5 p-6 md:p-8">
+        <div
+          className="rounded-3xl p-6 md:p-8"
+          style={{
+            backgroundColor: "var(--bg-secondary)",
+            border: "1px solid var(--border-subtle)",
+            boxShadow: "var(--shadow-deep)",
+          }}
+        >
           {/* Header */}
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h2 className="text-xl md:text-2xl font-semibold text-black">
+              <h2
+                className="text-xl md:text-2xl font-semibold"
+                style={{ color: "var(--text-primary)", fontFamily: "Georgia, serif" }}
+              >
                 Personal Information
               </h2>
-              <p className="text-sm text-black/50 mt-1">
+              <p className="text-sm mt-1" style={{ color: "var(--text-secondary)" }}>
                 Update your personal details and contact information.
               </p>
             </div>
@@ -189,12 +207,17 @@ const onDeleteAccount = async () => {
               <button
                 type="button"
                 onClick={() => setEditing(true)}
-                className="h-11 rounded-full border-2 border-[#35C759] px-4 text-sm font-semibold text-[#35C759] hover:bg-[#35C759]/10 flex items-center gap-2"
+                className="h-11 rounded-full px-4 text-sm font-semibold flex items-center gap-2 transition-colors"
+                style={{
+                  border: "2px solid var(--gold-primary)",
+                  color: "var(--gold-primary)",
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(201, 161, 93, 0.1)")}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
               >
                 <Pencil size={16} />
                 Edit Information
               </button>
-
             </div>
           </div>
 
@@ -203,75 +226,87 @@ const onDeleteAccount = async () => {
             {/* Avatar + Upload (optional) */}
             <div className="flex items-center gap-5 mb-8">
               <div className="space-y-2">
-                <label className="text-xs font-medium text-gray-700">Profile Image</label>
+                <label className="text-xs font-medium" style={{ color: "var(--text-secondary)" }}>
+                  Profile Image
+                </label>
 
-                        <Controller
-                        name="image"
-                        control={control}
-                        render={({ field: { onChange } }) => (
-                        <div className="flex items-center gap-6">
-                        {/* Avatar */}
-                        <div className="relative h-28 w-28">
-                        <div className="h-28 w-28 overflow-hidden rounded-full border-2 border-gray-200 bg-gray-100 shadow">
-                            {previewImage ? (
+                <Controller
+                  name="image"
+                  control={control}
+                  render={({ field: { onChange } }) => (
+                    <div className="flex items-center gap-6">
+                      {/* Avatar */}
+                      <div className="relative h-28 w-28">
+                        <div
+                          className="h-28 w-28 overflow-hidden rounded-full"
+                          style={{
+                            border: "2px solid var(--border-strong)",
+                            backgroundColor: "var(--bg-elevated)",
+                          }}
+                        >
+                          {previewImage ? (
                             // eslint-disable-next-line @next/next/no-img-element
                             <img
-                                src={previewImage}
-                                alt="Profile preview"
-                                className="h-full w-full object-cover"
+                              src={previewImage}
+                              alt="Profile preview"
+                              className="h-full w-full object-cover"
                             />
-                            ) : user?.image ? (
+                          ) : user?.image ? (
                             <Image
-                                src={process.env.NEXT_PUBLIC_API_BASE_URL + user.image}
-                                alt="Profile"
-                                width={112}
-                                height={112}
-                                className="h-full w-full object-cover"
+                              src={process.env.NEXT_PUBLIC_API_BASE_URL + user.image}
+                              alt="Profile"
+                              width={112}
+                              height={112}
+                              className="h-full w-full object-cover"
                             />
-                            ) : (
-                            <div className="h-full w-full flex items-center justify-center text-black/40">
-                                <User size={40} />
+                          ) : (
+                            <div
+                              className="h-full w-full flex items-center justify-center"
+                              style={{ color: "var(--text-secondary)" }}
+                            >
+                              <User size={40} />
                             </div>
-                            )}
+                          )}
                         </div>
 
                         {previewImage && (
-                            <button
+                          <button
                             type="button"
                             onClick={() => clearImage(onChange)}
-                            className="absolute -top-2 -right-2 flex h-9 w-9 items-center justify-center rounded-full bg-red-500 text-white shadow-md hover:bg-red-600"
+                            className="absolute -top-2 -right-2 flex h-9 w-9 items-center justify-center rounded-full shadow-md transition-colors"
+                            style={{ backgroundColor: "#D14343", color: "#fff" }}
                             title="Remove uploaded image"
-                            >
+                          >
                             <X size={18} />
-                            </button>
+                          </button>
                         )}
 
                         <button
-                            type="button"
-                            onClick={() => fileInputRef.current?.click()}
-                            className="absolute bottom-1 right-1 flex h-10 w-10 items-center justify-center rounded-full bg-green-500 text-white shadow-md hover:opacity-90"
-                            title="Change photo"
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="absolute bottom-1 right-1 flex h-10 w-10 items-center justify-center rounded-full shadow-md transition-transform hover:scale-105"
+                          style={{ backgroundColor: "var(--gold-primary)", color: "var(--text-on-gold)" }}
+                          title="Change photo"
                         >
-                            <Camera size={18} />
+                          <Camera size={18} />
                         </button>
-                        </div>
+                      </div>
 
-                        <input
+                      <input
                         ref={fileInputRef}
                         type="file"
                         accept=".jpg,.jpeg,.png,.webp"
                         onChange={(e) => handleImageChange(e.target.files?.[0], onChange)}
                         className="hidden"
-                        />
-                        </div>
-                        )}
-                        />
-
-
-
+                      />
+                    </div>
+                  )}
+                />
 
                 {errors.image && (
-                  <p className="text-xs text-red-600">{errors.image.message}</p>
+                  <p className="text-xs" style={{ color: "#E57373" }}>
+                    {errors.image.message}
+                  </p>
                 )}
               </div>
 
@@ -280,82 +315,102 @@ const onDeleteAccount = async () => {
 
             {/* Grid like screenshot */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              {/* Username -> Like "First Name" */}
+              {/* Username */}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-black/80">
+                <label className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
                   Username
                 </label>
                 <input
                   {...register("username")}
                   disabled={!editing}
                   className={inputBase}
+                  style={inputStyle}
+                  onFocus={onInputFocus}
+                  onBlur={onInputBlur}
                   placeholder="Username"
                 />
                 {errors.username?.message && (
-                  <p className="text-xs text-red-600">{errors.username.message}</p>
+                  <p className="text-xs" style={{ color: "#E57373" }}>
+                    {errors.username.message}
+                  </p>
                 )}
               </div>
 
-              {/* Gender -> Like "Last Name" */}
-             <div className="space-y-2">
-            <label className="text-sm font-medium text-black/80">Gender</label>
+              {/* Gender */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
+                  Gender
+                </label>
 
-            <FormSelect<UpdateUserData>
-              control={control}
-              name="gender"
-              placeholder="Select gender"
-              options={genderOptions}
-              disabled={!editing}
-              error={errors.gender?.message}
-              className={inputBase + " h-11 rounded-xl"} // match your input style
-            />
-          </div>
+                <FormSelect<UpdateUserData>
+                  control={control}
+                  name="gender"
+                  placeholder="Select gender"
+                  options={genderOptions}
+                  disabled={!editing}
+                  error={errors.gender?.message}
+                  className={inputBase + " h-11 rounded-xl"}
+                />
+              </div>
 
-              {/* Location -> Like "Shipping Address" (full width) */}
+              {/* Location */}
               <div className="space-y-2 md:col-span-2">
-                <label className="text-sm font-medium text-black/80">
+                <label className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
                   Shipping Address
                 </label>
                 <input
                   {...register("location")}
                   disabled={!editing}
                   className={inputBase}
+                  style={inputStyle}
+                  onFocus={onInputFocus}
+                  onBlur={onInputBlur}
                   placeholder="Enter your address"
                 />
                 {errors.location?.message && (
-                  <p className="text-xs text-red-600">{errors.location.message}</p>
+                  <p className="text-xs" style={{ color: "#E57373" }}>
+                    {errors.location.message}
+                  </p>
                 )}
               </div>
 
               {/* Email */}
               <div className="space-y-2 md:col-span-2">
-                <label className="text-sm font-medium text-black/80">
+                <label className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
                   Email Address
                 </label>
                 <input
                   {...register("email")}
                   disabled={!editing}
                   className={inputBase}
+                  style={inputStyle}
+                  onFocus={onInputFocus}
+                  onBlur={onInputBlur}
                   placeholder="you@example.com"
                 />
                 {errors.email?.message && (
-                  <p className="text-xs text-red-600">{errors.email.message}</p>
+                  <p className="text-xs" style={{ color: "#E57373" }}>
+                    {errors.email.message}
+                  </p>
                 )}
               </div>
 
               {/* Phone */}
               <div className="space-y-2 md:col-span-2">
-                <label className="text-sm font-medium text-black/80">
+                <label className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
                   Phone Number
                 </label>
                 <input
                   {...register("phoneNumber")}
                   disabled={!editing}
                   className={inputBase}
+                  style={inputStyle}
+                  onFocus={onInputFocus}
+                  onBlur={onInputBlur}
                   placeholder="(xxx) xxx-xxxx"
                 />
                 {errors.phoneNumber?.message && (
-                  <p className="text-xs text-red-600">
+                  <p className="text-xs" style={{ color: "#E57373" }}>
                     {errors.phoneNumber.message}
                   </p>
                 )}
@@ -363,7 +418,7 @@ const onDeleteAccount = async () => {
 
               {/* DOB */}
               <div className="space-y-2 md:col-span-2">
-                <label className="text-sm font-medium text-black/80">
+                <label className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
                   Date of Birth
                 </label>
                 <input
@@ -371,14 +426,19 @@ const onDeleteAccount = async () => {
                   {...register("DOB")}
                   disabled={!editing}
                   className={inputBase}
+                  style={inputStyle}
+                  onFocus={onInputFocus}
+                  onBlur={onInputBlur}
                 />
                 {errors.DOB?.message && (
-                  <p className="text-xs text-red-600">{errors.DOB.message}</p>
+                  <p className="text-xs" style={{ color: "#E57373" }}>
+                    {errors.DOB.message}
+                  </p>
                 )}
               </div>
             </div>
 
-            {/* Bottom row like screenshot (optional) */}
+            {/* Bottom row */}
             <div className="mt-8 flex items-center justify-end gap-3">
               {editing && (
                 <button
@@ -389,34 +449,45 @@ const onDeleteAccount = async () => {
                     reset(undefined, { keepDirty: false });
                     if (fileInputRef.current) fileInputRef.current.value = "";
                   }}
-                  className="h-11 rounded-full px-5 text-sm font-semibold text-black/70 hover:bg-black/5"
+                  className="h-11 rounded-full px-5 text-sm font-semibold transition-colors"
+                  style={{ color: "var(--text-secondary)" }}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--bg-elevated)")}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
                 >
                   Cancel
                 </button>
               )}
-  <button
-    type="button"
-    onClick={() => setDeleteOpen(true)}
-    className="rounded-full bg-red-600 px-6 py-2 text-sm font-semibold text-white hover:bg-red-700"
-  >
-    Delete Account
-  </button>
-<DeleteAccountModal
-  open={deleteOpen}
-  password={deletePassword}
-  setPassword={setDeletePassword}
-  deleting={deleting}
-  onClose={() => {
-    setDeleteOpen(false);
-    setDeletePassword("");
-  }}
-  onConfirm={onDeleteAccount}
-/>
+              <button
+                type="button"
+                onClick={() => setDeleteOpen(true)}
+                className="rounded-full px-6 py-2 text-sm font-semibold text-white transition-colors"
+                style={{ backgroundColor: "#D14343" }}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#B93838")}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#D14343")}
+              >
+                Delete Account
+              </button>
+              <DeleteAccountModal
+                open={deleteOpen}
+                password={deletePassword}
+                setPassword={setDeletePassword}
+                deleting={deleting}
+                onClose={() => {
+                  setDeleteOpen(false);
+                  setDeletePassword("");
+                }}
+                onConfirm={onDeleteAccount}
+              />
 
               <button
                 type="submit"
                 disabled={!editing || isSubmitting || (!isDirty && !previewImage)}
-                className="h-11 rounded-full bg-[#35C759] px-6 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="h-11 rounded-full px-6 text-sm font-semibold transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                style={{
+                  backgroundColor: "var(--gold-primary)",
+                  color: "var(--text-on-gold)",
+                  boxShadow: "0 10px 30px -8px rgba(201, 161, 93, 0.4)",
+                }}
               >
                 {isSubmitting ? "Saving..." : "Save"}
               </button>

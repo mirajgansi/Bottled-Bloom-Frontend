@@ -7,13 +7,13 @@ import ProductFilterBar from "@/app/user/dashboard/_components/ProductFillterBar
 import { useRouter } from "next/navigation";
 
 const categories = [
-  { title: "Eau de Parfum", image: "/categories/edp.png", href: "/user/category/eau-de-parfum" },
-  { title: "Eau de Toilette", image: "/categories/edt.png", href: "/user/category/eau-de-toilette" },
-  { title: "Attar & Oud", image: "/categories/attar-oud.png", href: "/user/category/attar-oud" },
-  { title: "Women's Fragrance", image: "/categories/womens.png", href: "/user/category/womens" },
-  { title: "Men's Fragrance", image: "/categories/mens.png", href: "/user/category/mens" },
-  { title: "Body Mist", image: "/categories/body-mist.png", href: "/user/category/body-mist" },
-  { title: "Gift Sets", image: "/categories/gift-sets.png", href: "/user/category/gift-sets" },
+  { title: "Eau de Parfum", image: "/categories/edp.jpg", href: "/user/category/eau-de-parfum" },
+  { title: "Eau de Toilette", image: "/categories/edt.jpg", href: "/user/category/eau-de-toilette" },
+  { title: "Attar & Oud", image: "/categories/attar-oud.jpg", href: "/user/category/attar-oud" },
+  { title: "Women's Fragrance", image: "/categories/womens.jpg", href: "/user/category/womens" },
+  { title: "Men's Fragrance", image: "/categories/mens.jpg", href: "/user/category/mens" },
+  { title: "Body Mist", image: "/categories/body-mist.jpg", href: "/user/category/body-mist" },
+  { title: "Gift Sets", image: "/categories/gift-sets.jpg", href: "/user/category/gift-sets" },
 ];
 
 const HomePage = () => {

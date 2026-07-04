@@ -24,7 +24,6 @@ function buildImageUrl(image?: string) {
   return `${base}/${image.replace(/^\/+/, "")}`;
 }
 
-
 export default async function OrderDetailPage({
   params,
 }: {
@@ -57,32 +56,52 @@ export default async function OrderDetailPage({
     order?.grandTotal ??
     (Number(subtotal) + Number(shippingFee));
 
-  const status = order?.status;
   const createdAt = order?.createdAt ?? order?.date;
 
   return (
-    <div className="mx-auto max-w-5xl p-6">
+    <div
+      className="mx-auto max-w-5xl p-6 min-h-screen"
+      style={{ backgroundColor: "var(--bg-primary)" }}
+    >
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <Link href="/user/orders" className="text-sm text-gray-600 hover:underline">
+          <Link
+            href="/user/orders"
+            className="text-sm transition-colors hover:underline"
+            style={{ color: "var(--text-secondary)" }}
+          >
             ← Back to orders
           </Link>
-          <h1 className="mt-2 text-2xl font-semibold">Order Details</h1>
-          <p className="mt-1 text-sm text-gray-500">
+          <h1
+            className="mt-2 text-2xl font-semibold"
+            style={{ color: "var(--text-primary)", fontFamily: "Georgia, serif" }}
+          >
+            Order Details
+          </h1>
+          <p className="mt-1 text-sm" style={{ color: "var(--text-secondary)" }}>
             Order ID:{" "}
-            <span className="font-medium text-gray-800">
+            <span className="font-medium" style={{ color: "var(--gold-primary)" }}>
               {order?._id ?? order?.id ?? id}
             </span>
           </p>
-          <p className="text-sm text-gray-500">Placed: {dt(createdAt)}</p>
+          <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
+            Placed: {dt(createdAt)}
+          </p>
         </div>
 
-        <div className="rounded-2xl border bg-white p-4">
-          <p className="text-xs font-semibold text-gray-500">STATUS</p>
+        <div
+          className="rounded-2xl p-4"
+          style={{
+            backgroundColor: "var(--bg-secondary)",
+            border: "1px solid var(--border-subtle)",
+          }}
+        >
+          <p className="text-xs font-semibold" style={{ color: "var(--text-secondary)" }}>
+            STATUS
+          </p>
           <div className="mt-2">
-           <OrderStatusPill type="order" value={order.status} />
-
+            <OrderStatusPill type="order" value={order.status} />
           </div>
         </div>
       </div>
@@ -90,12 +109,23 @@ export default async function OrderDetailPage({
       {/* Content */}
       <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Items */}
-        <div className="lg:col-span-2 rounded-2xl border bg-white">
-          <div className="border-b p-4">
-            <h2 className="text-lg font-semibold">Items</h2>
+        <div
+          className="lg:col-span-2 rounded-2xl"
+          style={{
+            backgroundColor: "var(--bg-secondary)",
+            border: "1px solid var(--border-subtle)",
+          }}
+        >
+          <div className="p-4" style={{ borderBottom: "1px solid var(--border-subtle)" }}>
+            <h2
+              className="text-lg font-semibold"
+              style={{ color: "var(--text-primary)", fontFamily: "Georgia, serif" }}
+            >
+              Items
+            </h2>
           </div>
 
-          <div className="divide-y">
+          <div>
             {items.map((it: any, idx: number) => {
               const name = it?.name ?? it?.product?.name ?? "Item";
               const qty = Number(it?.qty ?? it?.quantity ?? 1);
@@ -112,9 +142,15 @@ export default async function OrderDetailPage({
                 <div
                   key={it?._id ?? `${name}-${idx}`}
                   className="flex items-start justify-between gap-4 p-4"
+                  style={{
+                    borderTop: idx === 0 ? "none" : "1px solid var(--border-subtle)",
+                  }}
                 >
                   <div className="flex items-start gap-4">
-              <div className="relative h-16 w-16 overflow-hidden rounded-xl bg-gray-100">
+                    <div
+                      className="relative h-16 w-16 overflow-hidden rounded-xl"
+                      style={{ backgroundColor: "var(--bg-elevated)" }}
+                    >
                       <Image
                         src={buildImageUrl(img)}
                         alt={name}
@@ -126,16 +162,23 @@ export default async function OrderDetailPage({
                     </div>
 
                     <div>
-                      <p className="text-sm font-semibold text-gray-900">{name}</p>
-                      <p className="mt-1 text-xs text-gray-500">
-                        Qty: <span className="font-medium text-gray-800">{qty}</span>
+                      <p className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+                        {name}
+                      </p>
+                      <p className="mt-1 text-xs" style={{ color: "var(--text-secondary)" }}>
+                        Qty:{" "}
+                        <span className="font-medium" style={{ color: "var(--text-primary)" }}>
+                          {qty}
+                        </span>
                         {"  "}• Price:{" "}
-                        <span className="font-medium text-gray-800">{money(price)}</span>
+                        <span className="font-medium" style={{ color: "var(--text-primary)" }}>
+                          {money(price)}
+                        </span>
                       </p>
                     </div>
                   </div>
 
-                  <p className="text-sm font-semibold text-gray-900">
+                  <p className="text-sm font-semibold" style={{ color: "var(--gold-primary)" }}>
                     {money(lineTotal)}
                   </p>
                 </div>
@@ -143,50 +186,77 @@ export default async function OrderDetailPage({
             })}
 
             {!items.length && (
-              <div className="p-6 text-sm text-gray-500">
+              <div className="p-6 text-sm" style={{ color: "var(--text-secondary)" }}>
                 No items found for this order.
               </div>
             )}
           </div>
 
           {/* Cancel button */}
-          <div className="border-t p-4">
+          <div className="p-4" style={{ borderTop: "1px solid var(--border-subtle)" }}>
             <CancelOrderButton orderId={order?._id ?? id} status={order?.status} />
           </div>
         </div>
 
         {/* Summary */}
-        <div className="rounded-2xl border bg-white">
-          <div className="border-b p-4">
-            <h2 className="text-lg font-semibold">Summary</h2>
+        <div
+          className="rounded-2xl"
+          style={{
+            backgroundColor: "var(--bg-secondary)",
+            border: "1px solid var(--border-subtle)",
+          }}
+        >
+          <div className="p-4" style={{ borderBottom: "1px solid var(--border-subtle)" }}>
+            <h2
+              className="text-lg font-semibold"
+              style={{ color: "var(--text-primary)", fontFamily: "Georgia, serif" }}
+            >
+              Summary
+            </h2>
           </div>
 
           <div className="space-y-3 p-4 text-sm">
             <div className="flex items-center justify-between">
-              <span className="text-gray-600">Subtotal</span>
-              <span className="font-semibold text-gray-900">{money(subtotal)}</span>
+              <span style={{ color: "var(--text-secondary)" }}>Subtotal</span>
+              <span className="font-semibold" style={{ color: "var(--text-primary)" }}>
+                {money(subtotal)}
+              </span>
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-gray-600">Shipping fee</span>
-              <span className="font-semibold text-gray-900">{money(shippingFee)}</span>
+              <span style={{ color: "var(--text-secondary)" }}>Shipping fee</span>
+              <span className="font-semibold" style={{ color: "var(--text-primary)" }}>
+                {money(shippingFee)}
+              </span>
             </div>
 
-            <div className="my-2 flex items-center justify-between border-t pt-3">
-              <span className="font-semibold text-gray-700">Total</span>
-              <span className="font-bold text-gray-900">{money(total)}</span>
+            <div
+              className="my-2 flex items-center justify-between pt-3"
+              style={{ borderTop: "1px solid var(--border-subtle)" }}
+            >
+              <span className="font-semibold" style={{ color: "var(--text-primary)" }}>
+                Total
+              </span>
+              <span className="font-bold text-lg" style={{ color: "var(--gold-primary)" }}>
+                {money(total)}
+              </span>
             </div>
           </div>
 
           {/* Shipping info */}
           {order?.shippingAddress && (
-            <div className="border-t p-4">
-              <p className="text-sm font-semibold">Shipping Address</p>
-              <p className="mt-2 text-sm text-gray-600">
-                {order.shippingAddress?.userName ?? ""}<br />
-                {order.shippingAddress?.phone ?? ""}<br />
+            <div className="p-4" style={{ borderTop: "1px solid var(--border-subtle)" }}>
+              <p className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+                Shipping Address
+              </p>
+              <p className="mt-2 text-sm" style={{ color: "var(--text-secondary)" }}>
+                {order.shippingAddress?.userName ?? ""}
+                <br />
+                {order.shippingAddress?.phone ?? ""}
+                <br />
                 {order.shippingAddress?.address1 ?? ""}{" "}
-                {order.shippingAddress?.address2 ?? ""}<br />
+                {order.shippingAddress?.address2 ?? ""}
+                <br />
                 {order.shippingAddress?.city ?? ""}{" "}
                 {order.shippingAddress?.state ?? ""}{" "}
                 {order.shippingAddress?.zip ?? ""}

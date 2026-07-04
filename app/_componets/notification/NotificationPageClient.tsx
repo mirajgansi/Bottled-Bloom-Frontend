@@ -181,54 +181,78 @@ export default function NotificationsPageClient({
     <div className="max-w-3xl mx-auto">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold">Notifications</h1>
-          <p className="text-sm text-gray-500">
-            Unread: <span className="font-medium">{unread}</span>
+          <h1
+            className="text-xl font-semibold"
+            style={{ color: "var(--text-primary)", fontFamily: "Georgia, serif" }}
+          >
+            Notifications
+          </h1>
+          <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
+            Unread:{" "}
+            <span className="font-medium" style={{ color: "var(--gold-primary)" }}>
+              {unread}
+            </span>
           </p>
         </div>
 
         <button
           onClick={markAllRead}
           disabled={isPending || unread === 0}
-          className="px-3 py-2 rounded-md text-sm font-medium bg-green-600 text-white disabled:opacity-50"
+          className="px-3 py-2 rounded-md text-sm font-medium transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100"
+          style={{ backgroundColor: "var(--gold-primary)", color: "var(--text-on-gold)" }}
         >
           Mark all read
         </button>
       </div>
 
-      <div className="mt-4 border rounded-lg overflow-hidden bg-white">
+      <div
+        className="mt-4 rounded-lg overflow-hidden"
+        style={{
+          backgroundColor: "var(--bg-secondary)",
+          border: "1px solid var(--border-subtle)",
+        }}
+      >
         {items.length === 0 ? (
-          <div className="p-8 text-center text-sm text-gray-500">
+          <div className="p-8 text-center text-sm" style={{ color: "var(--text-secondary)" }}>
             No notifications
           </div>
         ) : (
-          <ul className="divide-y">
-            {items.map((n) => (
+          <ul>
+            {items.map((n, idx) => (
               <li
                 key={n._id}
                 onClick={() => openNotif(n)}
-                className="cursor-pointer px-4 py-4 hover:bg-gray-50"
+                className="cursor-pointer px-4 py-4 transition-colors"
+                style={{
+                  borderTop: idx === 0 ? "none" : "1px solid var(--border-subtle)",
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--bg-elevated)")}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
               >
                 <div className="flex items-start gap-3">
                   <span
-                    className={`mt-1 h-2.5 w-2.5 rounded-full ${
-                      n.read ? "bg-transparent" : "bg-green-600"
-                    }`}
+                    className="mt-1 h-2.5 w-2.5 rounded-full shrink-0"
+                    style={{ backgroundColor: n.read ? "transparent" : "var(--gold-primary)" }}
                   />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-3">
                       <div
-                        className={`truncate ${
-                          n.read ? "text-gray-800 font-medium" : "font-semibold"
-                        }`}
+                        className="truncate"
+                        style={{
+                          color: "var(--text-primary)",
+                          fontWeight: n.read ? 500 : 600,
+                        }}
                       >
                         {n.title}
                       </div>
-                      <div className="shrink-0 text-xs text-gray-500">
+                      <div className="shrink-0 text-xs" style={{ color: "var(--text-secondary)" }}>
                         {timeAgo(n.createdAt)}
                       </div>
                     </div>
-                    <div className="mt-1 text-sm text-gray-600 line-clamp-2">
+                    <div
+                      className="mt-1 text-sm line-clamp-2"
+                      style={{ color: "var(--text-secondary)" }}
+                    >
                       {n.message}
                     </div>
                   </div>
@@ -243,7 +267,12 @@ export default function NotificationsPageClient({
         <button
           disabled={isPending || !hasMore}
           onClick={() => startTransition(() => load(page + 1, "append").catch(() => {}))}
-          className="px-4 py-2 rounded-md text-sm font-medium border disabled:opacity-50"
+          className="px-4 py-2 rounded-md text-sm font-medium transition-colors disabled:opacity-50"
+          style={{
+            border: "1px solid var(--border-strong)",
+            color: "var(--text-primary)",
+            backgroundColor: "var(--bg-elevated)",
+          }}
         >
           {hasMore ? "Load more" : "No more"}
         </button>

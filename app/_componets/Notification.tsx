@@ -32,12 +32,13 @@ type Notif = {
   read: boolean;
   createdAt: string;
   data?: {
-      orderId?: string;
-productId?: string;
-    url?: string; 
-    urlByRole?: Partial<Record<Role, string>>; 
+    orderId?: string;
+    productId?: string;
+    url?: string;
+    urlByRole?: Partial<Record<Role, string>>;
   };
 };
+
 function resolveNotifUrl(n: Notif, role: Role) {
   switch (n.type) {
     case "driver_assigned":
@@ -120,18 +121,18 @@ export default function NotificationBell({
       })();
     });
 
-   const onNotif = (n: Notif) => {
-  setItems((prev) => [n, ...prev]);
-  setUnread((u) => u + 1);
+    const onNotif = (n: Notif) => {
+      setItems((prev) => [n, ...prev]);
+      setUnread((u) => u + 1);
 
-  toast(n.title, {
-    description: n.message,
-    action: {
-      label: "Open",
-      onClick: () => router.push(resolveNotifUrl(n, role)),
-    },
-  });
-};
+      toast(n.title, {
+        description: n.message,
+        action: {
+          label: "Open",
+          onClick: () => router.push(resolveNotifUrl(n, role)),
+        },
+      });
+    };
 
     socket.on("notification", onNotif);
 
@@ -154,8 +155,7 @@ export default function NotificationBell({
 
         const url = resolveNotifUrl(n, role) ?? "/notifications";
         router.push(url);
-      } catch {
-      }
+      } catch {}
     });
   };
 
@@ -175,37 +175,52 @@ export default function NotificationBell({
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
         <button
-          className="relative inline-flex h-10 w-10 items-center justify-center rounded-full "
+          className="relative inline-flex h-10 w-10 items-center justify-center rounded-full"
           aria-label="Notifications"
         >
-          <Bell className="relative transition-colors cursor-pointer"
-          style={{ color: "var(--text-secondary)" }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = "var(--gold-primary)")}
-          onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-secondary)")}/>
+          <Bell
+            className="relative transition-colors cursor-pointer"
+            style={{ color: "var(--text-secondary)" }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = "var(--gold-primary)")}
+            onMouseLeave={(e) => (e.currentTarget.style.color = "var(--text-secondary)")}
+          />
           {unread > 0 ? (
-            <span className="absolute -top-1 -right-1 min-w-4.5 rounded-full bg-red-600 px-1 text-center text-[11px] leading-[18px] text-white">
+            <span
+              className="absolute -top-1 -right-1 min-w-4.5 rounded-full px-1 text-center text-[11px] leading-[18px] text-white"
+              style={{ backgroundColor: "#D14343" }}
+            >
               {unread > 99 ? "99+" : unread}
             </span>
           ) : null}
         </button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="end" className="w-90 p-0">
+      <DropdownMenuContent
+        align="end"
+        className="w-90 p-0 border-none"
+        style={{
+          backgroundColor: "var(--bg-elevated)",
+          boxShadow: "var(--shadow-deep)",
+        }}
+      >
         <div className="flex items-center justify-between px-3 py-2">
-          <div className="text-sm font-semibold">Notifications</div>
+          <div className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+            Notifications
+          </div>
           <button
             onClick={handleReadAll}
             disabled={isPending || unread === 0}
-            className="text-xs font-medium text-green-700 disabled:opacity-50 hover:text-green-900 transition cursor-pointer"
+            className="text-xs font-medium disabled:opacity-50 transition-colors cursor-pointer"
+            style={{ color: "var(--gold-primary)" }}
           >
             Mark all read
           </button>
         </div>
 
-        <DropdownMenuSeparator />
+        <DropdownMenuSeparator style={{ backgroundColor: "var(--border-subtle)" }} />
 
         {topItems.length === 0 ? (
-          <div className="px-3 py-8 text-center text-sm text-gray-500">
+          <div className="px-3 py-8 text-center text-sm" style={{ color: "var(--text-secondary)" }}>
             No notifications
           </div>
         ) : (
@@ -214,27 +229,31 @@ export default function NotificationBell({
               <DropdownMenuItem
                 key={n._id}
                 onClick={() => handleClickNotif(n)}
-                className="cursor-pointer items-start gap-2 px-3 py-3"
+                className="cursor-pointer items-start gap-2 px-3 py-3 focus:bg-[var(--bg-secondary)]"
               >
                 <span
-                  className={`mt-1 h-2 w-2 rounded-full ${
-                    n.read ? "bg-transparent" : "bg-green-600"
-                  }`}
+                  className="mt-1 h-2 w-2 rounded-full shrink-0"
+                  style={{ backgroundColor: n.read ? "transparent" : "var(--gold-primary)" }}
                 />
                 <div className="min-w-0">
                   <div className="flex items-center justify-between gap-2">
                     <div
-                      className={`truncate text-sm ${
-                        n.read ? "font-medium text-gray-700" : "font-semibold"
-                      }`}
+                      className="truncate text-sm"
+                      style={{
+                        color: "var(--text-primary)",
+                        fontWeight: n.read ? 500 : 600,
+                      }}
                     >
                       {n.title}
                     </div>
-                    <div className="shrink-0 text-[11px] text-gray-500">
+                    <div className="shrink-0 text-[11px]" style={{ color: "var(--text-secondary)" }}>
                       {timeAgo(n.createdAt)}
                     </div>
                   </div>
-                  <div className="mt-0.5 line-clamp-2 text-sm text-gray-600">
+                  <div
+                    className="mt-0.5 line-clamp-2 text-sm"
+                    style={{ color: "var(--text-secondary)" }}
+                  >
                     {n.message}
                   </div>
                 </div>
@@ -243,14 +262,21 @@ export default function NotificationBell({
           </div>
         )}
 
-        <DropdownMenuSeparator />
+        <DropdownMenuSeparator style={{ backgroundColor: "var(--border-subtle)" }} />
 
         <div className="px-3 py-2">
           <button
-            onClick={() => router.push(role === "user" ? "/user/notifications"
-  : role === "driver" ? "/driver/notifications"
-  : "/admin/notifications")}
-            className="w-full rounded-md bg-gray-900 py-2 text-sm font-semibold text-white  cursor-pointer hover:bg-gray-700 transition"
+            onClick={() =>
+              router.push(
+                role === "user"
+                  ? "/user/notifications"
+                  : role === "driver"
+                  ? "/driver/notifications"
+                  : "/admin/notifications"
+              )
+            }
+            className="w-full rounded-md py-2 text-sm font-semibold cursor-pointer transition-colors"
+            style={{ backgroundColor: "var(--gold-primary)", color: "var(--text-on-gold)" }}
           >
             View all
           </button>
