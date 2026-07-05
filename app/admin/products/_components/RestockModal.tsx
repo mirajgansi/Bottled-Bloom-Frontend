@@ -52,20 +52,35 @@ export default function RestockModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4">
-      <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-xl ring-1 ring-gray-100">
+    <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4">
+      <div
+        className="w-full max-w-md rounded-3xl p-6"
+        style={{
+          backgroundColor: "var(--bg-secondary)",
+          border: "1px solid var(--border-subtle)",
+          boxShadow: "var(--shadow-deep)",
+        }}
+      >
         {/* Header */}
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h3 className="text-lg font-bold text-gray-900">Restock Product</h3>
-            <p className="mt-1 text-sm text-gray-500">
+            <h3
+              className="text-lg font-bold"
+              style={{ color: "var(--text-primary)", fontFamily: "Georgia, serif" }}
+            >
+              Restock Product
+            </h3>
+            <p className="mt-1 text-sm" style={{ color: "var(--text-secondary)" }}>
               Add stock or set exact stock amount.
             </p>
           </div>
 
           <button
             onClick={onClose}
-            className="rounded-xl px-3 py-2 text-sm font-semibold ring-1 ring-gray-200 hover:bg-gray-50"
+            className="rounded-xl px-3 py-2 text-sm font-semibold transition-colors"
+            style={{ border: "1px solid var(--border-strong)", color: "var(--text-primary)" }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--bg-elevated)")}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
             type="button"
           >
             ✕
@@ -89,7 +104,7 @@ export default function RestockModal({
           />
 
           <div>
-            <label className="text-xs font-semibold text-gray-600">
+            <label className="text-xs font-semibold" style={{ color: "var(--text-secondary)" }}>
               Quantity
             </label>
             <input
@@ -101,11 +116,20 @@ export default function RestockModal({
                 required: "Quantity is required",
                 min: { value: 1, message: "Quantity must be at least 1" },
               })}
-              className="mt-1 h-10 w-full rounded-2xl border border-gray-200 bg-white px-3 text-sm outline-none focus:border-gray-400 disabled:opacity-50"
+              className="mt-1 h-10 w-full rounded-2xl px-3 text-sm outline-none transition-colors disabled:opacity-50"
+              style={{
+                backgroundColor: "var(--bg-elevated)",
+                color: "var(--text-primary)",
+                border: "1px solid var(--border-strong)",
+              }}
+              onFocus={(e) => (e.currentTarget.style.borderColor = "var(--gold-bright)")}
+              onBlur={(e) => (e.currentTarget.style.borderColor = "var(--border-strong)")}
               placeholder="e.g. 20"
             />
             {errors.quantity?.message ? (
-              <p className="mt-1 text-xs text-red-600">{errors.quantity.message}</p>
+              <p className="mt-1 text-xs" style={{ color: "#E57373" }}>
+                {errors.quantity.message}
+              </p>
             ) : null}
           </div>
 
@@ -114,7 +138,10 @@ export default function RestockModal({
             <button
               onClick={onClose}
               disabled={loading}
-              className="rounded-2xl px-4 py-2 text-sm font-semibold ring-1 ring-gray-200 hover:bg-gray-50 disabled:opacity-50"
+              className="rounded-2xl px-4 py-2 text-sm font-semibold transition-colors disabled:opacity-50"
+              style={{ border: "1px solid var(--border-strong)", color: "var(--text-primary)" }}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--bg-elevated)")}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
               type="button"
             >
               Cancel
@@ -123,7 +150,12 @@ export default function RestockModal({
             <button
               type="submit"
               disabled={loading}
-              className="rounded-2xl bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:opacity-50"
+              className="rounded-2xl px-4 py-2 text-sm font-semibold transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100"
+              style={{
+                backgroundColor: "var(--gold-primary)",
+                color: "var(--text-on-gold)",
+                boxShadow: "0 10px 30px -8px rgba(201, 161, 93, 0.4)",
+              }}
             >
               {loading ? "Updating..." : "Update Stock"}
             </button>

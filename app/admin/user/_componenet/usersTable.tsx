@@ -33,16 +33,17 @@ type Pagination = {
 function StatusPill({ status }: { status: User["status"] }) {
   const s = status ?? "active";
   const map = {
-    active: "bg-green-100 text-green-700 border-green-200",
-    frozen: "bg-blue-100 text-blue-700 border-blue-200",
-    inactive: "bg-gray-100 text-gray-600 border-gray-200",
+    active: { backgroundColor: "rgba(201, 161, 93, 0.15)", color: "var(--gold-primary)", border: "1px solid rgba(201, 161, 93, 0.3)" },
+    frozen: { backgroundColor: "rgba(245, 237, 224, 0.1)", color: "var(--text-secondary)", border: "1px solid var(--border-strong)" },
+    inactive: { backgroundColor: "var(--bg-elevated)", color: "var(--text-secondary)", border: "1px solid var(--border-subtle)" },
   } as const;
 
   const label = s === "active" ? "Active" : s === "frozen" ? "Frozen" : "Inactive";
 
   return (
     <span
-      className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium ${map[s]}`}
+      className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium"
+      style={map[s]}
     >
       {label}
     </span>
@@ -80,7 +81,7 @@ export default function UsersTable({
   const [openMenuFor, setOpenMenuFor] = useState<string | null>(null);
   const menuRef = useOutsideClick<HTMLDivElement>(() => setOpenMenuFor(null));
 
-  // ---- server-paging state (THIS IS THE KEY CHANGE) ----
+  // ---- server-paging state ----
   const [tableUsers, setTableUsers] = useState<User[]>(users ?? []);
   const [page, setPage] = useState<number>(pagination?.page ?? 1);
   const [pageSize, setPageSize] = useState<number>(
@@ -160,11 +161,18 @@ export default function UsersTable({
   return (
     <div className="space-y-4">
       {/* Search */}
-      <div className="flex w-full items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-1 shadow-sm dark:border-white/15 dark:bg-background">
+      <div
+        className="flex w-full items-center gap-2 rounded-full px-3 py-1"
+        style={{
+          backgroundColor: "var(--bg-secondary)",
+          border: "1px solid var(--border-subtle)",
+        }}
+      >
         <div className="flex flex-1 items-center gap-2">
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            className="h-4 w-4 text-gray-400"
+            className="h-4 w-4"
+            style={{ color: "var(--text-secondary)" }}
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -181,21 +189,25 @@ export default function UsersTable({
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search"
-            className="h-9 w-full bg-transparent text-sm outline-none placeholder:text-gray-400"
+            className="h-9 w-full bg-transparent text-sm outline-none"
+            style={{ color: "var(--text-primary)" }}
           />
         </div>
 
         <button
           type="button"
           onClick={() => fetchPage(1, searchTerm.trim())}
-          className="grid h-9 w-9 place-items-center rounded-full hover:bg-black/5 dark:hover:bg-white/10"
+          className="grid h-9 w-9 place-items-center rounded-full transition-colors"
+          style={{ color: "var(--text-secondary)" }}
+          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--bg-elevated)")}
+          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
           aria-label="Search"
           title="Search"
           disabled={loading}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            className="h-4 w-4 text-gray-600 dark:text-gray-300"
+            className="h-4 w-4"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -211,20 +223,35 @@ export default function UsersTable({
 
         <Link
           href="/admin/user/create"
-          className="h-10 inline-flex items-center rounded-2xl bg-green-600 border-gray-200 border-2 px-4 text-sm font-semibold text-white hover:bg-green-700"
+          className="h-10 inline-flex items-center rounded-2xl px-4 text-sm font-semibold transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]"
+          style={{
+            backgroundColor: "var(--gold-primary)",
+            color: "var(--text-on-gold)",
+            boxShadow: "0 10px 30px -8px rgba(201, 161, 93, 0.4)",
+          }}
         >
           Create new user
         </Link>
       </div>
 
       {loading ? (
-        <p className="text-sm text-gray-600">Loading...</p>
+        <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
+          Loading...
+        </p>
       ) : pageItems.length === 0 ? (
-        <p className="text-sm text-gray-600">No users found</p>
+        <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
+          No users found
+        </p>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white dark:border-white/15 dark:bg-background">
+        <div
+          className="overflow-x-auto rounded-xl"
+          style={{
+            backgroundColor: "var(--bg-secondary)",
+            border: "1px solid var(--border-subtle)",
+          }}
+        >
           <table className="min-w-[1000px] w-full text-sm">
-            <thead className="bg-gray-50 text-gray-600 dark:bg-white/5 dark:text-gray-300">
+            <thead style={{ backgroundColor: "var(--bg-elevated)", color: "var(--text-secondary)" }}>
               <tr className="text-left">
                 <th className="px-4 py-3 font-medium">Name</th>
                 <th className="px-4 py-3 font-medium">Email</th>
@@ -236,35 +263,44 @@ export default function UsersTable({
             </thead>
 
             <tbody>
-              {pageItems.map((u) => (
+              {pageItems.map((u, idx) => (
                 <tr
                   key={u._id}
-                  className="border-t border-gray-100 hover:bg-gray-50/60 dark:border-white/10 dark:hover:bg-white/5"
+                  className="transition-colors"
+                  style={{ borderTop: idx === 0 ? "none" : "1px solid var(--border-subtle)" }}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--bg-elevated)")}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
                 >
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
                       <NextLink
                         href={`/admin/driver/${u._id}`}
-                        className="flex items-center gap-3 "
+                        className="flex items-center gap-3"
                       >
                         <UserAvatar username={u.username} avatar={u.avatar} />
-                        <span className="font-medium dark:text-white truncate">
+                        <span
+                          className="font-medium truncate"
+                          style={{ color: "var(--text-primary)" }}
+                        >
                           {u.username}
                         </span>
                       </NextLink>
                     </div>
                   </td>
 
-                  <td className="px-4 py-3 text-gray-600 dark:text-gray-300">
+                  <td className="px-4 py-3" style={{ color: "var(--text-secondary)" }}>
                     {u.email}
                   </td>
-                  <td className="px-4 py-3 text-gray-600 dark:text-gray-300">
+                  <td className="px-4 py-3" style={{ color: "var(--text-secondary)" }}>
                     {u.phoneNumber ?? "-"}
                   </td>
-                  <td className="px-4 py-3 text-gray-600 dark:text-gray-300 truncate max-w-[240px]">
+                  <td
+                    className="px-4 py-3 truncate max-w-[240px]"
+                    style={{ color: "var(--text-secondary)" }}
+                  >
                     {u.location ?? "-"}
                   </td>
-                
+
                   <td className="px-4 py-3">
                     <StatusPill status={u.status} />
                   </td>
@@ -279,13 +315,16 @@ export default function UsersTable({
                         onClick={() =>
                           setOpenMenuFor((prev) => (prev === u._id ? null : u._id))
                         }
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-white/10"
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg transition-colors"
+                        style={{ color: "var(--text-secondary)" }}
+                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--bg-elevated)")}
+                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
                         aria-label="Actions"
                         title="Actions"
                       >
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
-                          className="h-5 w-5 text-gray-600 dark:text-gray-300"
+                          className="h-5 w-5"
                           viewBox="0 0 20 20"
                           fill="currentColor"
                         >
@@ -294,10 +333,20 @@ export default function UsersTable({
                       </button>
 
                       {openMenuFor === u._id && (
-                        <div className="absolute right-0 z-20 mt-2 w-48 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg dark:border-white/15 dark:bg-background">
+                        <div
+                          className="absolute right-0 z-20 mt-2 w-48 overflow-hidden rounded-xl"
+                          style={{
+                            backgroundColor: "var(--bg-elevated)",
+                            border: "1px solid var(--border-subtle)",
+                            boxShadow: "var(--shadow-deep)",
+                          }}
+                        >
                           <button
                             type="button"
-                            className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50/60 dark:hover:bg-red-500/10"
+                            className="w-full px-3 py-2 text-left text-sm transition-colors"
+                            style={{ color: "#E57373" }}
+                            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "rgba(225, 83, 83, 0.1)")}
+                            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
                             onClick={() => {
                               setOpenMenuFor(null);
                               setDeleteId(u._id);
@@ -315,10 +364,19 @@ export default function UsersTable({
           </table>
 
           {/* Pagination footer */}
-          <div className="flex items-center justify-between gap-3 border-t border-gray-100 px-4 py-3 text-sm text-gray-600 dark:border-white/10 dark:text-gray-300">
+          <div
+            className="flex items-center justify-between gap-3 px-4 py-3 text-sm"
+            style={{
+              borderTop: "1px solid var(--border-subtle)",
+              color: "var(--text-secondary)",
+            }}
+          >
             <div className="flex items-center gap-2">
               <span>Rows per page:</span>
-              <span className="inline-flex items-center gap-1 rounded-md border border-gray-200 px-2 py-1 text-xs dark:border-white/15">
+              <span
+                className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs"
+                style={{ border: "1px solid var(--border-strong)" }}
+              >
                 {pageSize}
               </span>
               <span className="ml-3 text-xs">
@@ -331,7 +389,8 @@ export default function UsersTable({
                 type="button"
                 onClick={() => fetchPage(page - 1)}
                 disabled={loading || page <= 1}
-                className="h-8 rounded-md border px-3 text-xs disabled:opacity-50 dark:border-white/15"
+                className="h-8 rounded-md px-3 text-xs transition-colors disabled:opacity-50"
+                style={{ border: "1px solid var(--border-strong)", color: "var(--text-primary)" }}
               >
                 Prev
               </button>
@@ -339,7 +398,8 @@ export default function UsersTable({
                 type="button"
                 onClick={() => fetchPage(page + 1)}
                 disabled={loading || page >= totalPages}
-                className="h-8 rounded-md border px-3 text-xs disabled:opacity-50 dark:border-white/15"
+                className="h-8 rounded-md px-3 text-xs transition-colors disabled:opacity-50"
+                style={{ border: "1px solid var(--border-strong)", color: "var(--text-primary)" }}
               >
                 Next
               </button>

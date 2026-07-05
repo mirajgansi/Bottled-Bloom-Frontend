@@ -10,7 +10,6 @@ import {
   Truck,
 } from "lucide-react";
 
-
 const ADMIN_LINKS = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/user", label: "Users", icon: Users },
@@ -27,15 +26,9 @@ export default function Sidebar() {
 
   return (
     <aside
-      className="
-        w-20 xl:w-64
-        min-h-full
-        bg-white dark:bg-gray-900
-        border-r border-gray-200 dark:border-gray-800
-        flex flex-col
-      "
+      className="w-20 xl:w-64 min-h-full flex flex-col"
+      style={{ backgroundColor: "var(--bg-secondary)" }}
     >
-     
       <nav className="flex flex-col gap-1 p-2">
         {ADMIN_LINKS.map((link) => {
           const Icon = link.icon;
@@ -45,28 +38,27 @@ export default function Sidebar() {
             <Link
               key={link.href}
               href={link.href}
-              className={`
-                group flex items-center gap-3
-                px-3 py-2.5 rounded-lg
-                text-sm font-medium
-                transition-all
-                ${
-                  active
-                    ? "bg-green-600 text-white shadow-sm"
-                    : "text-gray-800 hover:bg-green-50"
-                }
-              `}
+              className="group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors"
+              style={
+                active
+                  ? {
+                      backgroundColor: "var(--gold-primary)",
+                      color: "var(--text-on-gold)",
+                      boxShadow: "0 4px 14px -4px rgba(201, 161, 93, 0.4)",
+                    }
+                  : { color: "var(--text-secondary)" }
+              }
+              onMouseEnter={(e) => {
+                if (!active) e.currentTarget.style.backgroundColor = "var(--bg-elevated)";
+              }}
+              onMouseLeave={(e) => {
+                if (!active) e.currentTarget.style.backgroundColor = "transparent";
+              }}
             >
               <Icon
                 size={20}
-                className={`
-                  shrink-0
-                  ${
-                    active
-                      ? "text-current"
-                      : "text-gray-500 group-hover:text-gray-900"
-                  }
-                `}
+                className="shrink-0"
+                style={{ color: active ? "var(--text-on-gold)" : "var(--text-secondary)" }}
               />
               <span className="hidden xl:inline">{link.label}</span>
             </Link>

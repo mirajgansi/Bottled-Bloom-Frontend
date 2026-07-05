@@ -19,7 +19,7 @@ function fmt(ts?: string) {
 }
 
 export default function ShippingStatusSection({ order }: { order: any }) {
-  const [openDriver, setOpenDriver] = useState(false); 
+  const [openDriver, setOpenDriver] = useState(false);
 
   const events = useMemo(() => {
     const placed = {
@@ -62,13 +62,22 @@ export default function ShippingStatusSection({ order }: { order: any }) {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-3xl bg-white p-5 ring-1 ring-gray-100">
+      <div
+        className="rounded-3xl p-5"
+        style={{
+          backgroundColor: "var(--bg-secondary)",
+          border: "1px solid var(--border-subtle)",
+        }}
+      >
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h2 className="text-base font-semibold text-gray-900">
+            <h2
+              className="text-base font-semibold"
+              style={{ color: "var(--text-primary)", fontFamily: "Georgia, serif" }}
+            >
               Shipping Status
             </h2>
-            <p className="mt-1 text-sm text-gray-600">
+            <p className="mt-1 text-sm" style={{ color: "var(--text-secondary)" }}>
               Track the shipment progress
             </p>
           </div>
@@ -76,7 +85,12 @@ export default function ShippingStatusSection({ order }: { order: any }) {
           <button
             type="button"
             onClick={() => setOpenDriver(true)}
-            className="rounded-2xl bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700"
+            className="rounded-2xl px-4 py-2 text-sm font-semibold transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]"
+            style={{
+              backgroundColor: "var(--gold-primary)",
+              color: "var(--text-on-gold)",
+              boxShadow: "0 10px 30px -8px rgba(201, 161, 93, 0.4)",
+            }}
           >
             Choose Driver
           </button>
@@ -88,8 +102,19 @@ export default function ShippingStatusSection({ order }: { order: any }) {
       </div>
 
       {/* Timeline */}
-      <div className="rounded-3xl bg-white p-5 ring-1 ring-gray-100">
-        <h3 className="text-base font-semibold text-gray-900">Timeline</h3>
+      <div
+        className="rounded-3xl p-5"
+        style={{
+          backgroundColor: "var(--bg-secondary)",
+          border: "1px solid var(--border-subtle)",
+        }}
+      >
+        <h3
+          className="text-base font-semibold"
+          style={{ color: "var(--text-primary)", fontFamily: "Georgia, serif" }}
+        >
+          Timeline
+        </h3>
 
         <div className="mt-4 space-y-4">
           {events.map((e, idx) => {
@@ -97,11 +122,16 @@ export default function ShippingStatusSection({ order }: { order: any }) {
             return (
               <div key={idx} className="flex gap-3">
                 <div
-                  className={`mt-0.5 grid h-9 w-9 place-items-center rounded-2xl ring-1 ${
+                  className="mt-0.5 grid h-9 w-9 place-items-center rounded-2xl"
+                  style={
                     e.done
-                      ? "bg-green-700 text-white ring-gren-900"
-                      : "bg-white text-gray-400 ring-gray-200"
-                  }`}
+                      ? { backgroundColor: "var(--gold-primary)", color: "var(--text-on-gold)" }
+                      : {
+                          backgroundColor: "var(--bg-elevated)",
+                          color: "var(--text-secondary)",
+                          border: "1px solid var(--border-subtle)",
+                        }
+                  }
                 >
                   <Icon className="h-4 w-4" />
                 </div>
@@ -109,15 +139,18 @@ export default function ShippingStatusSection({ order }: { order: any }) {
                 <div className="flex-1">
                   <div className="flex items-center justify-between gap-2">
                     <p
-                      className={`text-sm font-semibold ${
-                        e.done ? "text-gray-900" : "text-gray-500"
-                      }`}
+                      className="text-sm font-semibold"
+                      style={{ color: e.done ? "var(--text-primary)" : "var(--text-secondary)" }}
                     >
                       {e.title}
                     </p>
-                    <p className="text-xs text-gray-500">{e.time}</p>
+                    <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
+                      {e.time}
+                    </p>
                   </div>
-                  <p className="mt-1 text-sm text-gray-600">{e.desc}</p>
+                  <p className="mt-1 text-sm" style={{ color: "var(--text-secondary)" }}>
+                    {e.desc}
+                  </p>
                 </div>
               </div>
             );

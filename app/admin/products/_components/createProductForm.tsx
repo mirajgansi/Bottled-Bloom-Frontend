@@ -7,18 +7,10 @@ import { toast } from "react-toastify";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { handleCreateProduct } from "@/lib/actions/product-action";
-import {  ProductData, ProductSchema } from "../schema";
-import {  CalendarIcon, Camera } from "lucide-react";
+import { ProductData, ProductSchema } from "../schema";
+import { Camera } from "lucide-react";
 import { CategoryModal } from "./category_modal";
 import CreateProductStep1Skeleton from "./skeleton_add_prdocut";
-import { format } from "date-fns";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
 
 /** ---------------- helpers ---------------- */
 type ActionResponse =
@@ -51,18 +43,47 @@ function normalizeActionResponse(res: any): ActionResponse {
   return { success: false, message: "Unexpected server response" };
 }
 
+function toNotesArray(text: string): string[] {
+  return text
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
 /** ---------------- main wizard ---------------- */
-type WizardData = ProductData
+type WizardData = ProductData;
+
 const stepFields: Record<number, (keyof WizardData)[]> = {
   1: ["name", "image", "description"],
-  2: [ "price", "inStock", "category"],
-  3: [
-    "manufacturer",
-    "manufactureDate",
-    "expireDate",
-    "nutritionalInfo",
-  ],
+  2: ["price", "inStock", "category"],
+  3: ["brand", "concentration", "gender", "volumeMl"],
 };
+
+const CONCENTRATION_OPTIONS = [
+  { value: "parfum", label: "Parfum" },
+  { value: "eau-de-parfum", label: "Eau de Parfum" },
+  { value: "eau-de-toilette", label: "Eau de Toilette" },
+  { value: "eau-de-cologne", label: "Eau de Cologne" },
+  { value: "attar", label: "Attar" },
+];
+
+const GENDER_OPTIONS = [
+  { value: "men", label: "Men" },
+  { value: "women", label: "Women" },
+  { value: "unisex", label: "Unisex" },
+];
+
+const inputClass =
+  "h-10 w-full rounded-md px-3 text-sm outline-none transition-colors";
+const inputStyle = {
+  backgroundColor: "var(--bg-elevated)",
+  color: "var(--text-primary)",
+  border: "1px solid var(--border-strong)",
+};
+const onFocus = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
+  (e.currentTarget.style.borderColor = "var(--gold-bright)");
+const onBlur = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
+  (e.currentTarget.style.borderColor = "var(--border-strong)");
 
 export default function CreateProductWizard() {
   const [pending, startTransition] = useTransition();
@@ -77,6 +98,11 @@ export default function CreateProductWizard() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [categoryOpen, setCategoryOpen] = useState(false);
 
+  // fragrance notes as comma-separated text, parsed into arrays on submit
+  const [topNotes, setTopNotes] = useState("");
+  const [heartNotes, setHeartNotes] = useState("");
+  const [baseNotes, setBaseNotes] = useState("");
+
   const {
     register,
     handleSubmit,
@@ -86,16 +112,16 @@ export default function CreateProductWizard() {
     trigger,
     reset,
     formState: { errors, isSubmitting },
-} = useForm<WizardData>({
-  resolver: zodResolver(ProductSchema),
-  shouldUnregister: false, 
-  mode: "onSubmit",
-  defaultValues: {
-    inStock: 0,
-    image: [], 
-  },
-});
-const [pageLoading, setPageLoading] = useState(true);
+  } = useForm<WizardData>({
+    resolver: zodResolver(ProductSchema),
+    shouldUnregister: false,
+    mode: "onSubmit",
+    defaultValues: {
+      inStock: 0,
+      image: [],
+    },
+  });
+  const [pageLoading, setPageLoading] = useState(true);
 
   const selectedCategory = watch("category");
 
@@ -105,25 +131,25 @@ const [pageLoading, setPageLoading] = useState(true);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-const handleImagesChange = (
-  newFiles: File[],
-  onChange: (files: File[]) => void,
-  current: File[] = [],
-) => {
-  const allowed = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
-  const maxSize = 5 * 1024 * 1024;
-  const maxCount = 3;
+  const handleImagesChange = (
+    newFiles: File[],
+    onChange: (files: File[]) => void,
+    current: File[] = [],
+  ) => {
+    const allowed = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+    const maxSize = 5 * 1024 * 1024;
+    const maxCount = 5;
 
-  const valid = newFiles.filter((f) => allowed.includes(f.type) && f.size <= maxSize);
+    const valid = newFiles.filter((f) => allowed.includes(f.type) && f.size <= maxSize);
 
-  if (valid.length !== newFiles.length) toast.error("Only JPG/PNG/WEBP under 5MB allowed");
+    if (valid.length !== newFiles.length) toast.error("Only JPG/PNG/WEBP under 5MB allowed");
 
-  const merged = [...current, ...valid].slice(0, maxCount);
+    const merged = [...current, ...valid].slice(0, maxCount);
 
-  if (current.length + valid.length > maxCount) toast.error(`Max ${maxCount} images allowed`);
+    if (current.length + valid.length > maxCount) toast.error(`Max ${maxCount} images allowed`);
 
-  onChange(merged);
-};
+    onChange(merged);
+  };
 
   const goNext = async () => {
     const fields = stepFields[step];
@@ -138,67 +164,56 @@ const handleImagesChange = (
   const goBack = () => setStep((s) => (s === 3 ? 2 : 1));
 
   const onSubmit: SubmitHandler<WizardData> = async (data) => {
-  console.log("SUBMIT CHECK:", {
-    step,
-    category: data.category,
-    imageIsArray: Array.isArray(data.image),
-    imageLen: data.image?.length,
-  });
+    if (step !== 3) return;
 
-  if (step !== 3) return;
+    const ok = await trigger(undefined, { shouldFocus: true });
+    if (!ok) return;
 
-const ok = await trigger(undefined, { shouldFocus: true });
-if (!ok) return;
+    if (pending || isSubmitting) return;
 
-console.log("schema.ts loaded (CreateProductWizard)");
+    startTransition(async () => {
+      try {
+        const formData = new FormData();
 
-  if (pending || isSubmitting) return;
+        formData.append("name", data.name);
+        formData.append("description", data.description);
+        formData.append("price", String(data.price));
+        formData.append("brand", data.brand);
+        formData.append("concentration", data.concentration);
+        formData.append("gender", data.gender);
+        formData.append("volumeMl", String(data.volumeMl));
+        formData.append("category", data.category);
+        formData.append("inStock", String(data.inStock ?? 0));
 
-  startTransition(async () => {
-    try {
-      const formData = new FormData();
+        const fragranceNotes = {
+          top: toNotesArray(topNotes),
+          heart: toNotesArray(heartNotes),
+          base: toNotesArray(baseNotes),
+        };
+        if (fragranceNotes.top.length || fragranceNotes.heart.length || fragranceNotes.base.length) {
+          formData.append("fragranceNotes", JSON.stringify(fragranceNotes));
+        }
 
-      formData.append("name", data.name);
-      formData.append("description", data.description);
-      formData.append("price", String(data.price));
-      formData.append("manufacturer", data.manufacturer);
+        data.image?.forEach((file) => formData.append("image", file));
 
-          if (data.manufactureDate) {
-            formData.append(
-              "manufactureDate",
-              data.manufactureDate
-            );
-          }
+        const raw = await handleCreateProduct(formData);
+        const response = normalizeActionResponse(raw);
 
-          if (data.expireDate) {
-            formData.append(
-              "expireDate",
-              data.expireDate
-            );
-          }
-      formData.append("nutritionalInfo", data.nutritionalInfo);
-      formData.append("category", data.category);
-      formData.append("inStock", String(data.inStock ?? 0));
+        if (!response.success) throw new Error(response.message || "Create product failed");
+        toast.success(response.message || "Product created successfully");
 
-     data.image?.forEach((file) => formData.append("image", file));
-
-
-      const raw = await handleCreateProduct(formData);
-      const response = normalizeActionResponse(raw);
-
-      if (!response.success) throw new Error(response.message || "Create product failed");
-    toast.success(response.message || "Product created successfully ");
-
-      reset({ inStock: 0, image: [] }); 
-      if (fileInputRef.current) fileInputRef.current.value = "";
-      setCompleted({ 1: false, 2: false, 3: false });
-      setStep(1);
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    }
-  });
-};
-
+        reset({ inStock: 0, image: [] });
+        if (fileInputRef.current) fileInputRef.current.value = "";
+        setTopNotes("");
+        setHeartNotes("");
+        setBaseNotes("");
+        setCompleted({ 1: false, 2: false, 3: false });
+        setStep(1);
+      } catch (err) {
+        toast.error(getErrorMessage(err));
+      }
+    });
+  };
 
   const StepBubble = ({ n, label }: { n: 1 | 2 | 3; label: string }) => {
     const active = step === n;
@@ -208,38 +223,47 @@ console.log("schema.ts loaded (CreateProductWizard)");
       <button
         type="button"
         onClick={() => {
-          // only allow going back to previous completed steps
           if (n < step) setStep(n);
         }}
         className="flex items-center gap-2 text-left"
       >
         <span
-          className={[
-            "grid h-6 w-6 place-items-center rounded-full text-xs font-bold",
-            done ? "bg-green-600 text-white" : active ? "bg-green-600 text-white" : "bg-gray-200 text-gray-700",
-          ].join(" ")}
+          className="grid h-6 w-6 place-items-center rounded-full text-xs font-bold"
+          style={
+            done || active
+              ? { backgroundColor: "var(--gold-primary)", color: "var(--text-on-gold)" }
+              : { backgroundColor: "var(--bg-elevated)", color: "var(--text-secondary)" }
+          }
         >
           {done ? "✓" : n}
         </span>
-        <span className={active ? "text-sm font-semibold text-green-600" : "text-sm text-gray-500"}>
+        <span
+          className="text-sm"
+          style={{
+            color: active ? "var(--gold-primary)" : "var(--text-secondary)",
+            fontWeight: active ? 600 : 400,
+          }}
+        >
           {label}
         </span>
       </button>
     );
   };
-useEffect(() => {
-  const t = setTimeout(() => setPageLoading(false), 700);
-  return () => clearTimeout(t);
-}, []);
 
-if (pageLoading) return <CreateProductStep1Skeleton />;
+  useEffect(() => {
+    const t = setTimeout(() => setPageLoading(false), 700);
+    return () => clearTimeout(t);
+  }, []);
+
+  if (pageLoading) return <CreateProductStep1Skeleton />;
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
       {/* Stepper top (only 1..3) */}
       <div className="flex flex-wrap items-center gap-6">
         <StepBubble n={1} label="Product Information" />
         <StepBubble n={2} label="Product Detail Information" />
-        <StepBubble n={3} label="Product Variant Creation" />
+        <StepBubble n={3} label="Fragrance & Variant Details" />
       </div>
 
       <AnimatePresence mode="wait">
@@ -253,106 +277,140 @@ if (pageLoading) return <CreateProductStep1Skeleton />;
             className="space-y-4"
           >
             <div className="space-y-1">
-              <label className="text-sm font-medium">Product Name</label>
+              <label className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
+                Product Name
+              </label>
               <input
                 type="text"
-                className="h-10 w-full rounded-md border border-black/10 px-3 text-sm outline-none focus:border-black/40"
+                className={inputClass}
+                style={inputStyle}
+                onFocus={onFocus}
+            
                 {...register("name")}
-                placeholder="e.g. Wai Wai noodles"
+                placeholder="e.g. Midnight Oud"
               />
-              {errors.name?.message && <p className="text-xs text-red-600">{errors.name.message}</p>}
+              {errors.name?.message && (
+                <p className="text-xs" style={{ color: "#E57373" }}>
+                  {errors.name.message}
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Product Images</label>
+              <label className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
+                Product Images
+              </label>
 
-             <Controller
-  name="image"
-  control={control}
-  render={({ field: { value = [], onChange } }) => (
-    <div
-      className="rounded-xl border border-dashed border-gray-300 p-6"
-      onDragOver={(e) => e.preventDefault()}
-      onDrop={(e) => {
-        e.preventDefault();
-        const files = Array.from(e.dataTransfer.files || []);
-        handleImagesChange(files, onChange, value);
-      }}
-    >
-      <input
-        ref={fileInputRef}
-        type="file"
-        multiple 
-        accept=".jpg,.jpeg,.png,.webp"
-        className="hidden"
-        onChange={(e) => {
-          const files = Array.from(e.target.files || []);
-          handleImagesChange(files, onChange, value);
-        }}
-      />
+              <Controller
+                name="image"
+                control={control}
+                render={({ field: { value = [], onChange } }) => (
+                  <div
+                    className="rounded-xl border-dashed p-6"
+                    style={{ border: "1px dashed var(--border-strong)" }}
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      const files = Array.from(e.dataTransfer.files || []);
+                      handleImagesChange(files, onChange, value);
+                    }}
+                  >
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      multiple
+                      accept=".jpg,.jpeg,.png,.webp"
+                      className="hidden"
+                      onChange={(e) => {
+                        const files = Array.from(e.target.files || []);
+                        handleImagesChange(files, onChange, value);
+                      }}
+                    />
 
-      {value.length ? (
-        <div className="space-y-3">
-          <div className="flex flex-wrap gap-3">
-            {value.map((file: File, idx: number) => (
-              <div key={idx} className="relative">
-                <img
-                  src={URL.createObjectURL(file)}
-                  className="h-24 w-24 rounded-lg object-cover"
-                  alt={`preview-${idx}`}
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    const next = value.filter((_: any, i: number) => i !== idx);
-                    onChange(next);
-                  }}
-                  className="absolute -right-2 -top-2 rounded-full bg-red-500 px-2 py-1 text-xs text-white"
-                >
-                  ✕
-                </button>
-              </div>
-            ))}
-          </div>
+                    {value.length ? (
+                      <div className="space-y-3">
+                        <div className="flex flex-wrap gap-3">
+                          {value.map((file: File, idx: number) => (
+                            <div key={idx} className="relative">
+                              <img
+                                src={URL.createObjectURL(file)}
+                                className="h-24 w-24 rounded-lg object-cover"
+                                style={{ border: "1px solid var(--border-subtle)" }}
+                                alt={`preview-${idx}`}
+                              />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const next = value.filter((_: any, i: number) => i !== idx);
+                                  onChange(next);
+                                }}
+                                className="absolute -right-2 -top-2 rounded-full px-2 py-1 text-xs text-white"
+                                style={{ backgroundColor: "#D14343" }}
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          ))}
+                        </div>
 
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="rounded-md bg-green-600 px-3 py-2 text-xs font-semibold text-white"
-          >
-            Add more images
-          </button>
-        </div>
-      ) : (
-        <button type="button" onClick={() => fileInputRef.current?.click()} className="w-full">
-          <div className="grid place-items-center gap-2 py-6">
-            <div className="grid h-10 w-10 place-items-center rounded-full bg-gray-100">
-              <Camera className="h-6 w-6" />
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="rounded-md px-3 py-2 text-xs font-semibold transition-transform hover:scale-[1.02]"
+                          style={{ backgroundColor: "var(--gold-primary)", color: "var(--text-on-gold)" }}
+                        >
+                          Add more images
+                        </button>
+                      </div>
+                    ) : (
+                      <button type="button" onClick={() => fileInputRef.current?.click()} className="w-full">
+                        <div className="grid place-items-center gap-2 py-6">
+                          <div
+                            className="grid h-10 w-10 place-items-center rounded-full"
+                            style={{ backgroundColor: "var(--bg-elevated)" }}
+                          >
+                            <Camera className="h-6 w-6" style={{ color: "var(--gold-primary)" }} />
+                          </div>
+                          <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
+                            Browse or Drag & Drop
+                          </p>
+                          <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
+                            Select up to 5 images
+                          </p>
+                          <p className="text-xs" style={{ color: "#E57373" }}>
+                            Use PNG image if possible
+                          </p>
+                        </div>
+                      </button>
+                    )}
+                  </div>
+                )}
+              />
+
+              {errors.image?.message && (
+                <p className="text-xs" style={{ color: "#E57373" }}>
+                  {String(errors.image.message)}
+                </p>
+              )}
             </div>
-            <p className="text-sm text-gray-600">Browse or Drag & Drop</p>
-            <p className="text-xs text-gray-400">Select up to 3 images</p>
-            <p className="text-xs text-red-700">Use png  image if possible</p>
-          </div>
-        </button>
-      )}
-    </div>
-  )}
-/>
-
-              {errors.image?.message && <p className="text-xs text-red-600">{String(errors.image.message)}</p>}
-            </div>
-
 
             {/* Product Description */}
             <div className="space-y-1">
-              <label className="text-sm font-medium">Product Description</label>
+              <label className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
+                Product Description
+              </label>
               <textarea
-                className="min-h-[110px] w-full rounded-md border border-black/10 px-3 py-2 text-sm outline-none focus:border-black/40"
+                className="min-h-[110px] w-full rounded-md px-3 py-2 text-sm outline-none transition-colors"
+                style={inputStyle}
+                onFocus={onFocus}
+         
                 {...register("description")}
-                placeholder="A detailed description of the product helps customers to learn more about the product."
+                placeholder="A detailed description of the fragrance helps customers learn more about it."
               />
               {errors.description?.message && (
-                <p className="text-xs text-red-600">{errors.description.message}</p>
+                <p className="text-xs" style={{ color: "#E57373" }}>
+                  {errors.description.message}
+                </p>
               )}
             </div>
           </motion.div>
@@ -368,59 +426,81 @@ if (pageLoading) return <CreateProductStep1Skeleton />;
             transition={{ duration: 0.25 }}
             className="space-y-4"
           >
-              <div className="space-y-1">
-                <label className="text-sm font-medium">Product Price</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  className="h-10 w-full rounded-md border border-black/10 px-3 text-sm outline-none focus:border-black/40 disabled:bg-gray-100"
-                  {...register("price", { valueAsNumber: true })}
-                  placeholder="0.00"
-                />
-                {errors.price?.message && <p className="text-xs text-red-600">{errors.price.message}</p>}
-              </div>
-         
+            <div className="space-y-1">
+              <label className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
+                Product Price
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                className={inputClass}
+                style={inputStyle}
+                onFocus={onFocus}
+          
+                {...register("price", { valueAsNumber: true })}
+                placeholder="0.00"
+              />
+              {errors.price?.message && (
+                <p className="text-xs" style={{ color: "#E57373" }}>
+                  {errors.price.message}
+                </p>
+              )}
+            </div>
 
             {/* In Stock */}
             <div className="space-y-1">
-              <label className="text-sm font-medium">In Stock</label>
+              <label className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
+                In Stock
+              </label>
               <input
                 type="number"
-                className="h-10 w-full rounded-md border border-black/10 px-3 text-sm outline-none focus:border-black/40"
+                className={inputClass}
+                style={inputStyle}
+                onFocus={onFocus}
+          
                 {...register("inStock", { valueAsNumber: true })}
               />
-              {errors.inStock?.message && <p className="text-xs text-red-600">{errors.inStock.message}</p>}
+              {errors.inStock?.message && (
+                <p className="text-xs" style={{ color: "#E57373" }}>
+                  {errors.inStock.message}
+                </p>
+              )}
             </div>
 
             {/* Category modal picker */}
-          <div className="space-y-2">
-  <label className="text-sm font-medium">Category</label>
+            <div className="space-y-2">
+              <label className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
+                Category
+              </label>
 
-  <input type="hidden" {...register("category")} />
+              <input type="hidden" {...register("category")} />
 
-  <button
-    type="button"
-    onClick={() => setCategoryOpen(true)}
-    className="h-10 w-full rounded-md border border-black/10 px-3 text-left text-sm outline-none hover:bg-black/5"
-  >
-    {selectedCategory ? selectedCategory : "Select category"}
-  </button>
+              <button
+                type="button"
+                onClick={() => setCategoryOpen(true)}
+                className="h-10 w-full rounded-md px-3 text-left text-sm outline-none transition-colors"
+                style={inputStyle}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--bg-secondary)")}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "var(--bg-elevated)")}
+              >
+                {selectedCategory ? selectedCategory : "Select category"}
+              </button>
 
-  {errors.category?.message && (
-    <p className="text-xs text-red-600">{errors.category.message}</p>
-  )}
+              {errors.category?.message && (
+                <p className="text-xs" style={{ color: "#E57373" }}>
+                  {errors.category.message}
+                </p>
+              )}
 
-  <CategoryModal
-    open={categoryOpen}
-    onClose={() => setCategoryOpen(false)}
-    selected={selectedCategory}
-    onSave={(value) => {
-  console.log("CATEGORY SAVED:", value);
-  setValue("category", value as any, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
-}}
-  />
-</div>
-
+              <CategoryModal
+                open={categoryOpen}
+                onClose={() => setCategoryOpen(false)}
+                selected={selectedCategory}
+                onSave={(value) => {
+                  setValue("category", value as any, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+                }}
+              />
+            </div>
           </motion.div>
         )}
 
@@ -434,104 +514,107 @@ if (pageLoading) return <CreateProductStep1Skeleton />;
             transition={{ duration: 0.25 }}
             className="space-y-4"
           >
-            {/* Manufacturer */}
+            {/* Brand */}
             <div className="space-y-1">
-              <label className="text-sm font-medium">Manufacturer</label>
+              <label className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
+                Brand
+              </label>
               <input
                 type="text"
-                className="h-10 w-full rounded-md border border-black/10 px-3 text-sm outline-none focus:border-black/40"
-                {...register("manufacturer")}
+                className={inputClass}
+                style={inputStyle}
+                onFocus={onFocus}
+    
+                {...register("brand")}
+                placeholder="e.g. Bottled Bloom"
               />
-              {errors.manufacturer?.message && (
-                <p className="text-xs text-red-600">{errors.manufacturer.message}</p>
+              {errors.brand?.message && (
+                <p className="text-xs" style={{ color: "#E57373" }}>
+                  {errors.brand.message}
+                </p>
               )}
             </div>
 
-            {/* Dates */}
+            {/* Concentration + Gender */}
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <div className="space-y-1">
-  <label className="text-sm font-medium">Manufacture Date</label>
-
- <Controller
-  control={control}
-  name="manufactureDate"
-  render={({ field }) => (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button variant="outline" className="h-10 w-full justify-start text-left font-normal">
-          <CalendarIcon className="mr-2 h-4 w-4" />
-          {field.value ? format(new Date(field.value), "PPP") : <span className="text-muted-foreground">Pick a date</span>}
-        </Button>
-      </PopoverTrigger>
-
-      <PopoverContent className="w-auto p-0">
-        <Calendar
-          mode="single"
-          selected={field.value ? new Date(field.value) : undefined}
-          onSelect={(date) => field.onChange(date ? date.toISOString() : null)}
-          initialFocus
-        />
-      </PopoverContent>
-    </Popover>
-  )}
-/>
-
-  {errors.manufactureDate?.message && (
-    <p className="text-xs text-red-600">
-      {errors.manufactureDate.message}
-    </p>
-  )}
-</div>
+              <div className="space-y-1">
+                <label className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
+                  Concentration
+                </label>
+                <select
+                  className={inputClass}
+                  style={inputStyle}
+                  onFocus={onFocus}
+          
+                  {...register("concentration")}
+                  defaultValue=""
+                >
+                  <option value="" disabled>
+                    Select concentration
+                  </option>
+                  {CONCENTRATION_OPTIONS.map((c) => (
+                    <option key={c.value} value={c.value}>
+                      {c.label}
+                    </option>
+                  ))}
+                </select>
+                {errors.concentration?.message && (
+                  <p className="text-xs" style={{ color: "#E57373" }}>
+                    {errors.concentration.message as string}
+                  </p>
+                )}
+              </div>
 
               <div className="space-y-1">
-  <label className="text-sm font-medium">Expire Date</label>
-
-<Controller
-  control={control}
-  name="expireDate"
-  render={({ field }) => (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button variant="outline" className="h-10 w-full justify-start text-left font-normal">
-          <CalendarIcon className="mr-2 h-4 w-4" />
-          {field.value ? format(new Date(field.value), "PPP") : <span className="text-muted-foreground">Pick a date</span>}
-        </Button>
-      </PopoverTrigger>
-
-      <PopoverContent className="w-auto p-0">
-        <Calendar
-          mode="single"
-          selected={field.value ? new Date(field.value) : undefined}
-          onSelect={(date) => field.onChange(date ? date.toISOString() : null)}
-          initialFocus
-        />
-      </PopoverContent>
-    </Popover>
-  )}
-/>
-  {errors.expireDate?.message && (
-    <p className="text-xs text-red-600">
-      {errors.expireDate.message}
-    </p>
-  )}
-</div>
-
+                <label className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
+                  Gender
+                </label>
+                <select
+                  className={inputClass}
+                  style={inputStyle}
+                  onFocus={onFocus}
+           
+                  {...register("gender")}
+                  defaultValue=""
+                >
+                  <option value="" disabled>
+                    Select gender
+                  </option>
+                  {GENDER_OPTIONS.map((g) => (
+                    <option key={g.value} value={g.value}>
+                      {g.label}
+                    </option>
+                  ))}
+                </select>
+                {errors.gender?.message && (
+                  <p className="text-xs" style={{ color: "#E57373" }}>
+                    {errors.gender.message as string}
+                  </p>
+                )}
+              </div>
             </div>
 
-            {/* Nutritional Info */}
+            {/* Volume */}
             <div className="space-y-1">
-              <label className="text-sm font-medium">Nutritional Info</label>
+              <label className="text-sm font-medium" style={{ color: "var(--text-primary)" }}>
+                Volume (ml)
+              </label>
               <input
-                type="text"
-                className="h-10 w-full rounded-md border border-black/10 px-3 text-sm outline-none focus:border-black/40"
-                {...register("nutritionalInfo")}
+                type="number"
+                className={inputClass}
+                style={inputStyle}
+                onFocus={onFocus}
+                {...register("volumeMl", { valueAsNumber: true })}
+                placeholder="e.g. 100"
               />
-              {errors.nutritionalInfo?.message && (
-                <p className="text-xs text-red-600">{errors.nutritionalInfo.message}</p>
+              {errors.volumeMl?.message && (
+                <p className="text-xs" style={{ color: "#E57373" }}>
+                  {errors.volumeMl.message as string}
+                </p>
               )}
             </div>
 
-            
+        
           </motion.div>
         )}
       </AnimatePresence>
@@ -544,6 +627,9 @@ if (pageLoading) return <CreateProductStep1Skeleton />;
             if (step === 1) {
               reset();
               setPreviewImage(null);
+              setTopNotes("");
+              setHeartNotes("");
+              setBaseNotes("");
               if (fileInputRef.current) fileInputRef.current.value = "";
               setCompleted({ 1: false, 2: false, 3: false });
               toast.info("Cleared");
@@ -551,7 +637,10 @@ if (pageLoading) return <CreateProductStep1Skeleton />;
             }
             goBack();
           }}
-          className="h-10 rounded-md border border-gray-200 px-4 text-sm font-semibold hover:bg-black/5"
+          className="h-10 rounded-md px-4 text-sm font-semibold transition-colors"
+          style={{ border: "1px solid var(--border-strong)", color: "var(--text-primary)" }}
+          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--bg-elevated)")}
+          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
         >
           {step === 1 ? "Cancel" : "Back"}
         </button>
@@ -560,7 +649,12 @@ if (pageLoading) return <CreateProductStep1Skeleton />;
           <button
             type="button"
             onClick={goNext}
-            className="h-10 rounded-md bg-green-600 px-6 text-sm font-semibold text-white hover:opacity-90"
+            className="h-10 rounded-md px-6 text-sm font-semibold transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]"
+            style={{
+              backgroundColor: "var(--gold-primary)",
+              color: "var(--text-on-gold)",
+              boxShadow: "0 10px 30px -8px rgba(201, 161, 93, 0.4)",
+            }}
           >
             Continue
           </button>
@@ -568,7 +662,12 @@ if (pageLoading) return <CreateProductStep1Skeleton />;
           <button
             type="submit"
             disabled={isSubmitting || pending}
-            className="h-10 rounded-md bg-green-600 px-6 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60"
+            className="h-10 rounded-md px-6 text-sm font-semibold transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60 disabled:hover:scale-100"
+            style={{
+              backgroundColor: "var(--gold-primary)",
+              color: "var(--text-on-gold)",
+              boxShadow: "0 10px 30px -8px rgba(201, 161, 93, 0.4)",
+            }}
           >
             {isSubmitting || pending ? "Saving..." : "Create Product"}
           </button>

@@ -39,11 +39,26 @@ export function OrdersToolbar() {
           <button
             key={t.key}
             onClick={() => push({ tab: t.key })}
-            className={`rounded-full px-4 py-2 text-sm ring-1 cursor-pointer ${
+            className="rounded-full px-4 py-2 text-sm cursor-pointer transition-colors"
+            style={
               active === t.key
-                ? "bg-green-700 text-white ring-green-900 "
-                : "bg-white text-gray-700 ring-gray-200 hover:bg-gray-50"
-            }`}
+                ? {
+                    backgroundColor: "var(--gold-primary)",
+                    color: "var(--text-on-gold)",
+                    boxShadow: "0 4px 14px -4px rgba(201, 161, 93, 0.4)",
+                  }
+                : {
+                    backgroundColor: "var(--bg-secondary)",
+                    color: "var(--text-secondary)",
+                    border: "1px solid var(--border-subtle)",
+                  }
+            }
+            onMouseEnter={(e) => {
+              if (active !== t.key) e.currentTarget.style.backgroundColor = "var(--bg-elevated)";
+            }}
+            onMouseLeave={(e) => {
+              if (active !== t.key) e.currentTarget.style.backgroundColor = "var(--bg-secondary)";
+            }}
           >
             {t.label}
           </button>
@@ -51,7 +66,10 @@ export function OrdersToolbar() {
       </div>
 
       <div className="relative w-full md:w-[320px]">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
+        <Search
+          className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2"
+          style={{ color: "var(--text-secondary)" }}
+        />
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
@@ -59,7 +77,14 @@ export function OrdersToolbar() {
             if (e.key === "Enter") push({ search: q.trim() || null });
           }}
           placeholder="Search orders..."
-          className="w-full rounded-2xl border border-gray-200 bg-white py-2 pl-10 pr-3 text-sm outline-none focus:border-gray-400"
+          className="w-full rounded-2xl py-2 pl-10 pr-3 text-sm outline-none transition-colors"
+          style={{
+            backgroundColor: "var(--bg-elevated)",
+            color: "var(--text-primary)",
+            border: "1px solid var(--border-strong)",
+          }}
+          onFocus={(e) => (e.currentTarget.style.borderColor = "var(--gold-bright)")}
+          onBlur={(e) => (e.currentTarget.style.borderColor = "var(--border-strong)")}
         />
       </div>
     </div>

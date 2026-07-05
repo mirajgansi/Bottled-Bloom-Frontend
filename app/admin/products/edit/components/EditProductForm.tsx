@@ -4,20 +4,47 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "react-toastify";
-import { CalendarIcon, Camera } from "lucide-react";
+import { Camera } from "lucide-react";
 import Image from "next/image";
 import { ProductEditSchema, type ProductEditData } from "@/app/admin/products/schema";
 import { handleUpdateProduct } from "@/lib/actions/product-action";
 import { CategoryModal } from "../../_components/category_modal";
 
-import { format, isValid, parse, parseISO } from "date-fns";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
+const CONCENTRATION_OPTIONS = [
+  { value: "parfum", label: "Parfum" },
+  { value: "eau-de-parfum", label: "Eau de Parfum" },
+  { value: "eau-de-toilette", label: "Eau de Toilette" },
+  { value: "eau-de-cologne", label: "Eau de Cologne" },
+  { value: "attar", label: "Attar" },
+];
+
+const GENDER_OPTIONS = [
+  { value: "men", label: "Men" },
+  { value: "women", label: "Women" },
+  { value: "unisex", label: "Unisex" },
+];
+
+function toNotesArray(text: string): string[] {
+  return text
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+function notesToText(notes?: string[]) {
+  return (notes ?? []).join(", ");
+}
+
+const inputClass = "h-11 w-full rounded-xl px-3 text-sm outline-none transition-colors";
+const inputStyle = {
+  backgroundColor: "var(--bg-elevated)",
+  color: "var(--text-primary)",
+  border: "1px solid var(--border-strong)",
+};
+const onFocus = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
+  (e.currentTarget.style.borderColor = "var(--gold-bright)");
+const onBlur = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
+  (e.currentTarget.style.borderColor = "var(--border-strong)");
 
 export default function EditProductForm({ product }: { product?: any }) {
   const [pending, startTransition] = useTransition();
@@ -32,6 +59,10 @@ export default function EditProductForm({ product }: { product?: any }) {
         ? [product.image]
         : [],
   );
+
+  const [topNotes, setTopNotes] = useState(notesToText(product?.fragranceNotes?.top));
+  const [heartNotes, setHeartNotes] = useState(notesToText(product?.fragranceNotes?.heart));
+  const [baseNotes, setBaseNotes] = useState(notesToText(product?.fragranceNotes?.base));
 
   function buildImageUrl(img?: string) {
     if (!img) return "/cookie.jpg";
@@ -56,10 +87,10 @@ export default function EditProductForm({ product }: { product?: any }) {
       price: product?.price ?? 0,
       inStock: product?.inStock ?? 0,
       category: product?.category ?? "",
-      manufacturer: product?.manufacturer ?? "",
-      manufactureDate: product?.manufactureDate ?? "",
-      expireDate: product?.expireDate ?? "",
-      nutritionalInfo: product?.nutritionalInfo ?? "",
+      brand: product?.brand ?? "",
+      concentration: product?.concentration ?? "",
+      gender: product?.gender ?? "",
+      volumeMl: product?.volumeMl ?? undefined,
       image: [],
     },
   });
@@ -74,12 +105,16 @@ export default function EditProductForm({ product }: { product?: any }) {
       price: product?.price ?? 0,
       inStock: product?.inStock ?? 0,
       category: product?.category ?? "",
-      manufacturer: product?.manufacturer ?? "",
-      manufactureDate: product?.manufactureDate ?? "",
-      expireDate: product?.expireDate ?? "",
-      nutritionalInfo: product?.nutritionalInfo ?? "",
+      brand: product?.brand ?? "",
+      concentration: product?.concentration ?? "",
+      gender: product?.gender ?? "",
+      volumeMl: product?.volumeMl ?? undefined,
       image: [],
     });
+
+    setTopNotes(notesToText(product?.fragranceNotes?.top));
+    setHeartNotes(notesToText(product?.fragranceNotes?.heart));
+    setBaseNotes(notesToText(product?.fragranceNotes?.base));
 
     // also sync images if product changes
     setExistingImages(
@@ -110,7 +145,6 @@ export default function EditProductForm({ product }: { product?: any }) {
     if (current.length + valid.length > maxCount) toast.error(`Max ${maxCount} images allowed`);
 
     onChange(merged);
-    
   };
 
   const onSubmit = (data: ProductEditData) => {
@@ -124,13 +158,19 @@ export default function EditProductForm({ product }: { product?: any }) {
         fd.append("price", String(data.price ?? 0));
         fd.append("inStock", String(data.inStock ?? 0));
         fd.append("category", data.category ?? "");
-        fd.append("manufactureDate", data.manufactureDate ?? "");
-        fd.append("expireDate", data.expireDate ?? "");
-        // optional fields
-        fd.append("manufacturer", data.manufacturer ?? "");
-     
+        fd.append("brand", data.brand ?? "");
+        fd.append("concentration", data.concentration ?? "");
+        fd.append("gender", data.gender ?? "");
+        fd.append("volumeMl", String(data.volumeMl ?? 0));
 
-        fd.append("nutritionalInfo", data.nutritionalInfo ?? "");
+        const fragranceNotes = {
+          top: toNotesArray(topNotes),
+          heart: toNotesArray(heartNotes),
+          base: toNotesArray(baseNotes),
+        };
+        if (fragranceNotes.top.length || fragranceNotes.heart.length || fragranceNotes.base.length) {
+          fd.append("fragranceNotes", JSON.stringify(fragranceNotes));
+        }
 
         // keep existing images list
         fd.append("existingImages", JSON.stringify(existingImages));
@@ -149,23 +189,6 @@ export default function EditProductForm({ product }: { product?: any }) {
     });
   };
 
-function toDate(value?: string | null) {
-  if (!value) return undefined;
-
-  // ISO: 2020-01-02 or 2020-01-02T...
-  const iso = parseISO(value);
-  if (isValid(iso)) return iso;
-
-  // US: M/d/yyyy or MM/dd/yyyy
-  const mdY = parse(value, "M/d/yyyy", new Date());
-  if (isValid(mdY)) return mdY;
-
-  return undefined;
-}
-
-// choose ONE display format:
-const DISPLAY_FMT = "MM/dd/yyyy"; // -> 01/02/2020
-// or: const DISPLAY_FMT = "PPP";  // -> Jan 2, 2020
   return (
     <form
       onSubmit={handleSubmit(onSubmit, (formErrors) => {
@@ -174,82 +197,136 @@ const DISPLAY_FMT = "MM/dd/yyyy"; // -> 01/02/2020
           "Please fix the highlighted fields";
         toast.error(String(firstError));
       })}
-      className="space-y-6 rounded-3xl bg-white p-6 ring-1 ring-gray-200"
+      className="space-y-6 rounded-3xl p-6"
+      style={{
+        backgroundColor: "var(--bg-secondary)",
+        border: "1px solid var(--border-subtle)",
+      }}
     >
       {/* Name */}
       <div className="space-y-1">
-        <label className="text-sm font-semibold text-gray-800">Name</label>
+        <label className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+          Name
+        </label>
         <input
           {...register("name")}
-          className="h-11 w-full rounded-xl border border-gray-200 px-3 text-sm outline-none focus:border-gray-400"
+          className={inputClass}
+          style={inputStyle}
+          onFocus={onFocus}
+          onBlur={onBlur}
         />
-        {errors.name?.message && <p className="text-xs text-red-600">{String(errors.name.message)}</p>}
+        {errors.name?.message && (
+          <p className="text-xs" style={{ color: "#E57373" }}>
+            {String(errors.name.message)}
+          </p>
+        )}
       </div>
 
       {/* Description */}
       <div className="space-y-1">
-        <label className="text-sm font-semibold text-gray-800">Description</label>
+        <label className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+          Description
+        </label>
         <textarea
           {...register("description")}
-          className="min-h-[110px] w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-400"
+          className="min-h-[110px] w-full rounded-xl px-3 py-2 text-sm outline-none transition-colors"
+          style={inputStyle}
+          onFocus={onFocus}
+          onBlur={onBlur}
         />
         {errors.description?.message && (
-          <p className="text-xs text-red-600">{String(errors.description.message)}</p>
+          <p className="text-xs" style={{ color: "#E57373" }}>
+            {String(errors.description.message)}
+          </p>
         )}
       </div>
 
-      {/* Nutrition */}
+      {/* Brand */}
       <div className="space-y-1">
-        <label className="text-sm font-semibold text-gray-800">Nutrition</label>
-        <textarea
-          {...register("nutritionalInfo")}
-          placeholder="e.g. Calories, Protein, Carbs, Fat..."
-          className="min-h-[90px] w-full rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-400"
+        <label className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+          Brand
+        </label>
+        <input
+          {...register("brand")}
+          className={inputClass}
+          style={inputStyle}
+          onFocus={onFocus}
+          onBlur={onBlur}
+          placeholder="e.g. Bottled Bloom"
         />
-        {errors.nutritionalInfo?.message && (
-          <p className="text-xs text-red-600">{String(errors.nutritionalInfo.message)}</p>
+        {errors.brand?.message && (
+          <p className="text-xs" style={{ color: "#E57373" }}>
+            {String(errors.brand.message)}
+          </p>
         )}
       </div>
 
       {/* Price + Stock */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="space-y-1">
-          <label className="text-sm font-semibold text-gray-800">Price</label>
+          <label className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+            Price
+          </label>
           <input
             type="number"
             step="0.01"
             {...register("price", { valueAsNumber: true })}
-            className="h-11 w-full rounded-xl border border-gray-200 px-3 text-sm outline-none focus:border-gray-400"
+            className={inputClass}
+            style={inputStyle}
+            onFocus={onFocus}
+            onBlur={onBlur}
           />
-          {errors.price?.message && <p className="text-xs text-red-600">{String(errors.price.message)}</p>}
+          {errors.price?.message && (
+            <p className="text-xs" style={{ color: "#E57373" }}>
+              {String(errors.price.message)}
+            </p>
+          )}
         </div>
 
         <div className="space-y-1">
-          <label className="text-sm font-semibold text-gray-800">Stock</label>
+          <label className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+            Stock
+          </label>
           <input
             type="number"
             {...register("inStock", { valueAsNumber: true })}
-            className="h-11 w-full rounded-xl border border-gray-200 px-3 text-sm outline-none focus:border-gray-400"
+            className={inputClass}
+            style={inputStyle}
+            onFocus={onFocus}
+            onBlur={onBlur}
           />
-          {errors.inStock?.message && <p className="text-xs text-red-600">{String(errors.inStock.message)}</p>}
+          {errors.inStock?.message && (
+            <p className="text-xs" style={{ color: "#E57373" }}>
+              {String(errors.inStock.message)}
+            </p>
+          )}
         </div>
       </div>
 
       {/* Category */}
       <div className="space-y-2">
-        <label className="text-sm font-semibold text-gray-800">Category</label>
+        <label className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+          Category
+        </label>
 
         <input type="hidden" {...register("category")} />
 
         <button
           type="button"
           onClick={() => setCategoryOpen(true)}
-          className="h-11 w-full rounded-xl border border-gray-200 px-3 text-left text-sm outline-none hover:bg-gray-50"
+          className="h-11 w-full rounded-xl px-3 text-left text-sm outline-none transition-colors"
+          style={inputStyle}
+          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--bg-secondary)")}
+          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "var(--bg-elevated)")}
         >
           {selectedCategory || "Select category"}
         </button>
 
-        {errors.category?.message && <p className="text-xs text-red-600">{String(errors.category.message)}</p>}
+        {errors.category?.message && (
+          <p className="text-xs" style={{ color: "#E57373" }}>
+            {String(errors.category.message)}
+          </p>
+        )}
 
         <CategoryModal
           open={categoryOpen}
@@ -258,114 +335,103 @@ const DISPLAY_FMT = "MM/dd/yyyy"; // -> 01/02/2020
           onSave={(value) => setValue("category", value, { shouldValidate: true })}
         />
       </div>
-        {/* Manufacturer + Dates */}
-<div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-  {/* Manufacturer */}
-  <div className="space-y-1">
-    <label className="text-sm font-semibold text-gray-800">Manufacturer</label>
-    <input
-      {...register("manufacturer")}
-      className="h-11 w-full rounded-xl border border-gray-200 px-3 text-sm outline-none focus:border-gray-400"
-    />
-    {errors.manufacturer?.message && (
-      <p className="text-xs text-red-600">{String(errors.manufacturer.message)}</p>
-    )}
-  </div>
 
-  {/* Manufacture Date */}
-  <div className="space-y-1">
-    <label className="text-sm font-semibold text-gray-800">Manufacture Date</label>
-<Controller
-  control={control}
-  name="manufactureDate"
-  render={({ field }) => {
-    const selectedDate = toDate(field.value);
+      {/* Concentration + Gender + Volume */}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div className="space-y-1">
+          <label className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+            Concentration
+          </label>
+          <select
+            {...register("concentration")}
+            className={inputClass}
+            style={inputStyle}
+            onFocus={onFocus}
+            onBlur={onBlur}
+          >
+            <option value="">Select</option>
+            {CONCENTRATION_OPTIONS.map((c) => (
+              <option key={c.value} value={c.value}>
+                {c.label}
+              </option>
+            ))}
+          </select>
+          {errors.concentration?.message && (
+            <p className="text-xs" style={{ color: "#E57373" }}>
+              {String(errors.concentration.message)}
+            </p>
+          )}
+        </div>
 
-    return (
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button variant="outline" className="h-11 w-full justify-start text-left font-normal">
-            <CalendarIcon className="mr-2 h-4 w-4" />
-            {selectedDate ? (
-              format(selectedDate, DISPLAY_FMT)
-            ) : (
-              <span className="text-muted-foreground">Pick a date</span>
-            )}
-          </Button>
-        </PopoverTrigger>
+        <div className="space-y-1">
+          <label className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+            Gender
+          </label>
+          <select
+            {...register("gender")}
+            className={inputClass}
+            style={inputStyle}
+            onFocus={onFocus}
+            onBlur={onBlur}
+          >
+            <option value="">Select</option>
+            {GENDER_OPTIONS.map((g) => (
+              <option key={g.value} value={g.value}>
+                {g.label}
+              </option>
+            ))}
+          </select>
+          {errors.gender?.message && (
+            <p className="text-xs" style={{ color: "#E57373" }}>
+              {String(errors.gender.message)}
+            </p>
+          )}
+        </div>
 
-        <PopoverContent className="w-auto p-0">
-          <Calendar
-            mode="single"
-            selected={selectedDate}
-            onSelect={(d) => field.onChange(d ? format(d, "yyyy-MM-dd") : "")} // store ISO (recommended)
-            initialFocus
+        <div className="space-y-1">
+          <label className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+            Volume (ml)
+          </label>
+          <input
+            type="number"
+            {...register("volumeMl", { valueAsNumber: true })}
+            className={inputClass}
+            style={inputStyle}
+            onFocus={onFocus}
+            onBlur={onBlur}
           />
-        </PopoverContent>
-      </Popover>
-    );
-  }}
-/>
-    {errors.manufactureDate?.message && (
-      <p className="text-xs text-red-600">{String(errors.manufactureDate.message)}</p>
-    )}
-  </div>
+          {errors.volumeMl?.message && (
+            <p className="text-xs" style={{ color: "#E57373" }}>
+              {String(errors.volumeMl.message)}
+            </p>
+          )}
+        </div>
+      </div>
 
-  {/* Expire Date */}
-  <div className="space-y-1">
-    <label className="text-sm font-semibold text-gray-800">Expire Date</label>
-<Controller
-  control={control}
-  name="manufactureDate"
-  render={({ field }) => {
-    const selectedDate = toDate(field.value);
-
-    return (
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button variant="outline" className="h-11 w-full justify-start text-left font-normal">
-            <CalendarIcon className="mr-2 h-4 w-4" />
-            {selectedDate ? (
-              format(selectedDate, DISPLAY_FMT)
-            ) : (
-              <span className="text-muted-foreground">Pick a date</span>
-            )}
-          </Button>
-        </PopoverTrigger>
-
-        <PopoverContent className="w-auto p-0">
-          <Calendar
-            mode="single"
-            selected={selectedDate}
-            onSelect={(d) => field.onChange(d ? format(d, "yyyy-MM-dd") : "")} // store ISO (recommended)
-            initialFocus
-          />
-        </PopoverContent>
-      </Popover>
-    );
-  }}
-/>
-    {errors.expireDate?.message && (
-      <p className="text-xs text-red-600">{String(errors.expireDate.message)}</p>
-    )}
-  </div>
-</div>
+      {/* Fragrance Notes */}
+      
 
       {/* Existing images */}
       <div className="space-y-2">
-        <label className="text-sm font-semibold text-gray-800">Current Images</label>
+        <label className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+          Current Images
+        </label>
 
         {existingImages.length ? (
           <div className="flex flex-wrap gap-3">
             {existingImages.map((img, idx) => (
               <div key={`${img}-${idx}`} className="relative">
-                <div className="relative h-24 w-24 overflow-hidden rounded-xl ring-1 ring-gray-200">
+                <div
+                  className="relative h-24 w-24 overflow-hidden rounded-xl"
+                  style={{ border: "1px solid var(--border-subtle)" }}
+                >
                   <Image src={buildImageUrl(img)} alt="existing" fill className="object-cover" />
                 </div>
                 <button
                   type="button"
                   onClick={() => setExistingImages((p) => p.filter((_, i) => i !== idx))}
-                  className="absolute -right-2 -top-2 rounded-full bg-red-600 px-2 py-1 text-xs font-semibold text-white"
+                  className="absolute -right-2 -top-2 rounded-full px-2 py-1 text-xs font-semibold text-white"
+                  style={{ backgroundColor: "#D14343" }}
                 >
                   ✕
                 </button>
@@ -373,31 +439,35 @@ const DISPLAY_FMT = "MM/dd/yyyy"; // -> 01/02/2020
             ))}
           </div>
         ) : (
-          <p className="text-sm text-gray-500">No existing images</p>
+          <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
+            No existing images
+          </p>
         )}
       </div>
 
       {/* Upload new images */}
       <div className="space-y-2">
-        <label className="text-sm font-semibold text-gray-800">Upload New Images</label>
+        <label className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+          Upload New Images
+        </label>
 
         <Controller
           name="image"
           control={control}
           render={({ field: { value = [], onChange } }) => (
-            <div className="rounded-2xl border border-dashed border-gray-300 p-5">
+            <div className="rounded-2xl p-5" style={{ border: "1px dashed var(--border-strong)" }}>
               <input
                 ref={fileInputRef}
                 type="file"
                 multiple
                 accept=".jpg,.jpeg,.png,.webp"
                 className="hidden"
-               onChange={(e) => {
-              const files = Array.from(e.target.files || []);
-              handleImagesChange(files, onChange, value as File[]); 
+                onChange={(e) => {
+                  const files = Array.from(e.target.files || []);
+                  handleImagesChange(files, onChange, value as File[]);
 
-              if (fileInputRef.current) fileInputRef.current.value = "";
-            }}
+                  if (fileInputRef.current) fileInputRef.current.value = "";
+                }}
               />
 
               {value.length ? (
@@ -407,13 +477,15 @@ const DISPLAY_FMT = "MM/dd/yyyy"; // -> 01/02/2020
                       <div key={idx} className="relative">
                         <img
                           src={URL.createObjectURL(file)}
-                          className="h-24 w-24 rounded-xl object-cover ring-1 ring-gray-200"
+                          className="h-24 w-24 rounded-xl object-cover"
+                          style={{ border: "1px solid var(--border-subtle)" }}
                           alt="preview"
                         />
                         <button
                           type="button"
                           onClick={() => onChange((value as File[]).filter((_, i) => i !== idx))}
-                          className="absolute -right-2 -top-2 rounded-full bg-red-600 px-2 py-1 text-xs font-semibold text-white"
+                          className="absolute -right-2 -top-2 rounded-full px-2 py-1 text-xs font-semibold text-white"
+                          style={{ backgroundColor: "#D14343" }}
                         >
                           ✕
                         </button>
@@ -424,7 +496,8 @@ const DISPLAY_FMT = "MM/dd/yyyy"; // -> 01/02/2020
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="rounded-xl bg-blue-600 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-700"
+                    className="rounded-xl px-4 py-2 text-xs font-semibold transition-transform hover:scale-[1.02]"
+                    style={{ backgroundColor: "var(--gold-primary)", color: "var(--text-on-gold)" }}
                   >
                     Add more
                   </button>
@@ -432,13 +505,21 @@ const DISPLAY_FMT = "MM/dd/yyyy"; // -> 01/02/2020
               ) : (
                 <button type="button" onClick={() => fileInputRef.current?.click()} className="w-full">
                   <div className="grid place-items-center gap-2 py-6">
-                    <div className="grid h-10 w-10 place-items-center rounded-full bg-gray-100">
-                      <Camera className="h-6 w-6 text-gray-700" />
+                    <div
+                      className="grid h-10 w-10 place-items-center rounded-full"
+                      style={{ backgroundColor: "var(--bg-elevated)" }}
+                    >
+                      <Camera className="h-6 w-6" style={{ color: "var(--gold-primary)" }} />
                     </div>
-                    <p className="text-sm text-gray-600">Browse or Drag & Drop</p>
-                    <p className="text-xs text-gray-400">Up to 4 images</p>
-          <p className="text-xs text-red-400">use Png image is possible</p>
-
+                    <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
+                      Browse or Drag & Drop
+                    </p>
+                    <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
+                      Up to 5 images
+                    </p>
+                    <p className="text-xs" style={{ color: "#E57373" }}>
+                      Use PNG image if possible
+                    </p>
                   </div>
                 </button>
               )}
@@ -446,14 +527,23 @@ const DISPLAY_FMT = "MM/dd/yyyy"; // -> 01/02/2020
           )}
         />
 
-        {errors.image?.message && <p className="text-xs text-red-600">{String(errors.image.message)}</p>}
+        {errors.image?.message && (
+          <p className="text-xs" style={{ color: "#E57373" }}>
+            {String(errors.image.message)}
+          </p>
+        )}
       </div>
 
       {/* Save */}
       <button
         type="submit"
         disabled={pending}
-        className="inline-flex h-11 w-full items-center justify-center rounded-2xl bg-green-700 text-sm font-semibold text-white hover:bg-green-800 cursor-pointer disabled:opacity-60"
+        className="inline-flex h-11 w-full items-center justify-center rounded-2xl text-sm font-semibold transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] cursor-pointer disabled:opacity-60 disabled:hover:scale-100"
+        style={{
+          backgroundColor: "var(--gold-primary)",
+          color: "var(--text-on-gold)",
+          boxShadow: "0 10px 30px -8px rgba(201, 161, 93, 0.4)",
+        }}
       >
         {pending ? "Updating..." : "Update Product"}
       </button>

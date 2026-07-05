@@ -18,18 +18,23 @@ export default async function OrdersPage({
 
   const result = await handleGetAllOrders({
     page: sp.page ? Number(sp.page) : 1,
-  size: sp.size ? Number(sp.size) : 10,
-  search: sp.search,
+    size: sp.size ? Number(sp.size) : 10,
+    search: sp.search,
   });
 
   const orders = result.orders;
   const pagination = result.pagination;
 
   return (
-    <div className="min-h-screen ">
+    <div className="min-h-screen" style={{ backgroundColor: "var(--bg-primary)" }}>
       <div className="mx-auto max-w-7xl px-6 py-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-900">Orders</h1>
+          <h1
+            className="text-2xl font-bold"
+            style={{ color: "var(--text-primary)", fontFamily: "Georgia, serif" }}
+          >
+            Orders
+          </h1>
         </div>
 
         <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-4">
@@ -51,10 +56,20 @@ export default async function OrdersPage({
 
 function StatCard({ title, value }: { title: string; value: string }) {
   return (
-    <div className="rounded-3xl bg-white p-5 shadow-sm ring-1 ring-gray-100">
-      <p className="text-sm text-gray-500">{title}</p>
-      <p className="mt-2 text-3xl font-bold text-gray-900">{value}</p>
-      <div className="mt-3 h-1 w-24 rounded-full bg-gray-200" />
+    <div
+      className="rounded-3xl p-5"
+      style={{
+        backgroundColor: "var(--bg-secondary)",
+        border: "1px solid var(--border-subtle)",
+      }}
+    >
+      <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
+        {title}
+      </p>
+      <p className="mt-2 text-3xl font-bold" style={{ color: "var(--gold-primary)" }}>
+        {value}
+      </p>
+      <div className="mt-3 h-1 w-24 rounded-full" style={{ backgroundColor: "var(--bg-elevated)" }} />
     </div>
   );
 }

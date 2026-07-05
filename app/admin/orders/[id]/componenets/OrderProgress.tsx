@@ -20,7 +20,7 @@ function getStepIndex(status: OrderStatus) {
 export default function OrderProgress({
   status,
   compact = false,
-  animateOnMount = false, 
+  animateOnMount = false,
 }: {
   status: OrderStatus;
   compact?: boolean;
@@ -52,23 +52,30 @@ export default function OrderProgress({
             <div key={s.key} className="flex-1">
               <div className="flex items-center gap-2">
                 <div
-                  className={[
-                    "flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold ring-1",
-                    "transition-all duration-500 ease-out",
+                  className="flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold transition-all duration-500 ease-out"
+                  style={
                     active
-                      ? "bg-green-800 text-white ring-green-900 scale-105"
-                      : "bg-white text-gray-500 ring-gray-200 scale-100",
-                  ].join(" ")}
+                      ? {
+                          backgroundColor: "var(--gold-primary)",
+                          color: "var(--text-on-gold)",
+                          boxShadow: "0 0 0 1px var(--gold-deep)",
+                          transform: "scale(1.05)",
+                        }
+                      : {
+                          backgroundColor: "var(--bg-elevated)",
+                          color: "var(--text-secondary)",
+                          boxShadow: "0 0 0 1px var(--border-subtle)",
+                          transform: "scale(1)",
+                        }
+                  }
                 >
                   {i + 1}
                 </div>
 
                 {!compact && (
                   <p
-                    className={[
-                      "text-sm font-semibold transition-colors duration-500",
-                      active ? "text-green-900" : "text-gray-500",
-                    ].join(" ")}
+                    className="text-sm font-semibold transition-colors duration-500"
+                    style={{ color: active ? "var(--gold-primary)" : "var(--text-secondary)" }}
                   >
                     {s.label}
                   </p>
@@ -76,13 +83,16 @@ export default function OrderProgress({
               </div>
 
               {i !== steps.length - 1 && (
-                <div className="mt-3 h-1 w-full rounded-full bg-gray-100 overflow-hidden">
+                <div
+                  className="mt-3 h-1 w-full rounded-full overflow-hidden"
+                  style={{ backgroundColor: "var(--bg-elevated)" }}
+                >
                   <div
-                    className={[
-                      "h-1 rounded-full bg-gray-900",
-                      "transition-all duration-700 ease-out", 
-                      i < current ? "w-full" : "w-0",
-                    ].join(" ")}
+                    className="h-1 rounded-full transition-all duration-700 ease-out"
+                    style={{
+                      backgroundColor: "var(--gold-primary)",
+                      width: i < current ? "100%" : "0%",
+                    }}
                   />
                 </div>
               )}
@@ -92,7 +102,7 @@ export default function OrderProgress({
       </div>
 
       {status === "cancelled" && (
-        <p className="text-sm font-semibold text-red-600">
+        <p className="text-sm font-semibold" style={{ color: "#E57373" }}>
           This order has been cancelled.
         </p>
       )}
