@@ -8,12 +8,32 @@ type StatCardProps = {
   Icon?: LucideIcon;
 };
 
-const bgStyles = {
-  blue: "bg-blue-50 hover:bg-blue-100 hover:border-blue-300",
-  green: "bg-green-50 hover:bg-green-100 hover:border-green-300",
-  yellow: "bg-yellow-50 hover:bg-yellow-100 hover:border-yellow-300",
-  purple: "bg-purple-50 hover:bg-purple-100 hover:border-purple-300",
-  red: "bg-red-50 hover:bg-red-100 hover:border-red-300",
+const colorStyles = {
+  blue: {
+    backgroundColor: "var(--bg-elevated)",
+    border: "1px solid var(--border-subtle)",
+    hoverBorder: "var(--border-strong)",
+  },
+  green: {
+    backgroundColor: "rgba(201, 161, 93, 0.12)",
+    border: "1px solid rgba(201, 161, 93, 0.3)",
+    hoverBorder: "var(--gold-primary)",
+  },
+  yellow: {
+    backgroundColor: "rgba(232, 194, 122, 0.12)",
+    border: "1px solid rgba(232, 194, 122, 0.3)",
+    hoverBorder: "var(--gold-bright)",
+  },
+  purple: {
+    backgroundColor: "rgba(122, 90, 46, 0.15)",
+    border: "1px solid rgba(122, 90, 46, 0.35)",
+    hoverBorder: "var(--gold-deep)",
+  },
+  red: {
+    backgroundColor: "rgba(225, 83, 83, 0.1)",
+    border: "1px solid rgba(225, 83, 83, 0.3)",
+    hoverBorder: "#E57373",
+  },
 };
 
 export default function StatCard({
@@ -23,40 +43,48 @@ export default function StatCard({
   color = "blue",
   Icon,
 }: StatCardProps) {
+  const styles = colorStyles[color];
+
   return (
     <div
-      className={`
-        group
-        rounded-2xl
-        border
-        p-5
-        shadow-sm
-        transition-all duration-300
-        hover:shadow-xl
-        hover:-translate-y-1
-        cursor-pointer
-        ${bgStyles[color]}
-      `}
+      className="group rounded-2xl p-5 transition-all duration-300 hover:-translate-y-1 cursor-pointer"
+      style={{
+        backgroundColor: styles.backgroundColor,
+        border: styles.border,
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.borderColor = styles.hoverBorder;
+        e.currentTarget.style.boxShadow = "0 12px 30px -10px rgba(0,0,0,0.5)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.borderColor = styles.border.split(" ")[2] ?? styles.border;
+        e.currentTarget.style.boxShadow = "none";
+      }}
     >
       {/* Header */}
-      <div className="flex items-center justify-between " >
-        <p className="text-sm text-gray-600">{title}</p>
+      <div className="flex items-center justify-between">
+        <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
+          {title}
+        </p>
 
         {Icon && (
-          <div className="rounded-lg bg-white p-2 shadow-sm">
-            <Icon className="h-5 w-5 text-gray-700" />
+          <div
+            className="rounded-lg p-2"
+            style={{ backgroundColor: "var(--bg-secondary)", border: "1px solid var(--border-subtle)" }}
+          >
+            <Icon className="h-5 w-5" style={{ color: "var(--gold-primary)" }} />
           </div>
         )}
       </div>
 
       {/* Value */}
-      <div className="mt-4 text-3xl font-bold text-black">
+      <div className="mt-4 text-3xl font-bold" style={{ color: "var(--text-primary)" }}>
         {value}
       </div>
 
       {/* Sub text */}
       {sub && (
-        <p className="mt-2 text-sm text-gray-600">
+        <p className="mt-2 text-sm" style={{ color: "var(--text-secondary)" }}>
           {sub}
         </p>
       )}

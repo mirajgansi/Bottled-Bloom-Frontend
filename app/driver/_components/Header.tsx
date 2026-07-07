@@ -4,9 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useAuth } from "@/context/AuthContext";
-
 import AvatarMenu from "@/app/_componets/AvatarMenu";
-import NotificationBell from "@/app/_componets/Notification";
 
 function formatTime(d: Date) {
   return new Intl.DateTimeFormat("en-US", {
@@ -29,8 +27,7 @@ export default function Header({
 }: {
   onMenuClick?: () => void;
 }) {
-  const { user } = useAuth();
-
+  const { user, loading } = useAuth();
   const [now, setNow] = React.useState(() => new Date());
 
   React.useEffect(() => {
@@ -38,37 +35,50 @@ export default function Header({
     return () => clearInterval(id);
   }, []);
 
-  const displayName = user?.userName || user?.name || user?.email || "Driver";
+  const displayName = user?.userName || user?.name || user?.email || "Admin";
+
+  if (loading || !user?._id) return null;
 
   return (
-    <header className="sticky top-0 z-50 border-b border-black/10 bg-white/80 backdrop-blur supports-backdrop-filter:bg-white/70">
+    <header
+      className="sticky top-0 z-50 backdrop-blur"
+      style={{
+        borderBottom: "1px solid var(--border-subtle)",
+        backgroundColor: "rgba(23, 17, 12, 0.85)",
+      }}
+    >
       <nav className="mx-auto max-w-full px-4 sm:px-6 lg:px-8">
         <div className="flex h-14 sm:h-16 items-center justify-between">
           {/* LEFT */}
-          <div className="flex items-center gap-3 sm:gap-4">
-            {/* ✅ Menu button (shows below xl) */}
+          <div className="flex items-center gap-3">
+            {/* Mobile menu button */}
             <button
               type="button"
               onClick={onMenuClick}
-              className="xl:hidden inline-flex h-10 w-10 items-center justify-center rounded-xl ring-1 ring-black/10 bg-white hover:bg-gray-50"
+              className="lg:hidden inline-flex h-10 w-10 items-center justify-center rounded-xl transition-colors"
+              style={{
+                border: "1px solid var(--border-strong)",
+                color: "var(--text-primary)",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--bg-elevated)")}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
               aria-label="Open menu"
               title="Menu"
             >
               ☰
             </button>
 
-            <Link href="/driver" className="flex items-center gap-3 sm:gap-4">
-              {/* Logo */}
-              <div className="relative h-10 w-10 sm:h-12 sm:w-12 overflow-hidden rounded-full ring-1 ring-black/10">
-                <Image src="/cookie.jpg" alt="Logo" fill className="object-cover" />
-              </div>
+            <Link href="/admin" className="flex items-center gap-3 sm:gap-4">
+             
 
-              {/* Title + Time */}
               <div className="leading-tight">
-                <div className="text-base sm:text-lg font-bold text-black">
-                  Click Shop
+                <div
+                  className="text-base sm:text-lg font-bold"
+                  style={{ color: "var(--gold-primary)", fontFamily: "Georgia, serif" }}
+                >
+                  Bottled Bloom
                 </div>
-                <div className="text-[10px] sm:text-[11px] font-medium text-gray-500">
+                <div className="text-[10px] sm:text-[11px] font-medium" style={{ color: "var(--text-secondary)" }}>
                   {formatTime(now)} <span className="mx-1">•</span> {formatDate(now)}
                 </div>
               </div>
@@ -77,16 +87,20 @@ export default function Header({
 
           {/* RIGHT */}
           <div className="flex items-center gap-3 sm:gap-4">
-            <div className="hidden md:block text-right leading-tight">
-              <div className="text-sm font-semibold text-gray-900">{displayName}</div>
-              <div className="text-xs text-gray-500">Driver</div>
+            <div className="block text-right leading-tight">
+              <div className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+                {displayName}
+              </div>
+              <div className="text-xs" style={{ color: "var(--text-secondary)" }}>
+                {user.role?.toUpperCase?.() ?? "ADMIN"}
+              </div>
             </div>
 
-            <div className="flex justify-center xl:justify-end">
-              {user?._id && <NotificationBell userId={user._id} role={user.role} />}
-            </div>
-
-            <AvatarMenu displayName={displayName} roleLabel="Driver" image={user?.image} />
+            <AvatarMenu
+              displayName={displayName}
+              profileHref="/admin/profile"
+              roleLabel="Admin"
+            />
           </div>
         </div>
       </nav>

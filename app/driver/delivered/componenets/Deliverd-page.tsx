@@ -15,8 +15,8 @@ type Order = {
   _id: string;
   createdAt?: string;
   total?: number;
-  status: OrderStatus;        
-  paymentStatus: PaymentStatus; 
+  status: OrderStatus;
+  paymentStatus: PaymentStatus;
   items?: { quantity: number }[];
   shippingAddress?: {
     userName?: string;
@@ -41,8 +41,6 @@ function money(n?: number) {
   }).format(n || 0);
 }
 
-
-
 export default function DriverDeliveredPage() {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
@@ -51,7 +49,6 @@ export default function DriverDeliveredPage() {
   const [page, setPage] = useState(1);
   const [size, setSize] = useState(10);
 
-  // If your backend returns meta, we’ll read it safely
   const [totalPages, setTotalPages] = useState<number>(1);
   const [total, setTotal] = useState<number>(0);
 
@@ -60,29 +57,25 @@ export default function DriverDeliveredPage() {
       setLoading(true);
       setErr(null);
 
-    // inside load()
+      const res: any = await handleGetMyAssignedOrders({ page, size });
 
-const res: any = await handleGetMyAssignedOrders({ page, size });
+      if (res?.success === false) {
+        setErr(res.message);
+        return;
+      }
 
-if (res?.success === false) {
-  setErr(res.message);
-  return;
-}
+      const data = res?.data ?? res;
 
-const data = res?.data ?? res;
+      const list =
+        data?.orders ||
+        data?.items ||
+        (Array.isArray(data) ? data : []) ||
+        [];
 
-const list =
-  data?.orders ||
-  data?.items ||
-  (Array.isArray(data) ? data : []) ||
-  [];
+      // Delivered page: only show delivered orders
+      const filtered = list.filter((o: any) => o.status === "delivered");
 
-const filtered = list.filter(
-  (o: any) => o.status === "pending" || o.status === "delivered"
-);
-
-setOrders(filtered);
-
+      setOrders(filtered);
 
       const meta = data?.pagination || data?.meta || {};
       setTotal(Number(meta?.total ?? data?.total ?? 0));
@@ -94,50 +87,64 @@ setOrders(filtered);
       setLoading(false);
     }
   };
-type PageSizeForm = { size: string };
 
-const { control, watch, setValue } = useForm<PageSizeForm>({
-  defaultValues: { size: String(size) },
-});
+  type PageSizeForm = { size: string };
 
-const sizeWatch = watch("size");
+  const { control, watch, setValue } = useForm<PageSizeForm>({
+    defaultValues: { size: String(size) },
+  });
 
-useEffect(() => {
-  if (!sizeWatch) return;
-  const next = Number(sizeWatch);
-  setPage(1);
-  setSize(next);
-}, [sizeWatch]);
+  const sizeWatch = watch("size");
+
+  useEffect(() => {
+    if (!sizeWatch) return;
+    const next = Number(sizeWatch);
+    setPage(1);
+    setSize(next);
+  }, [sizeWatch]);
+
   useEffect(() => {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, size]);
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen" style={{ backgroundColor: "var(--bg-primary)" }}>
       <div className="mx-auto max-w-6xl px-4 py-8">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Assigned Orders</h1>
-            <p className="mt-1 text-sm text-gray-600">
+            <h1
+              className="text-2xl font-bold"
+              style={{ color: "var(--text-primary)", fontFamily: "Georgia, serif" }}
+            >
+              Delivered Orders
+            </h1>
+            <p className="mt-1 text-sm" style={{ color: "var(--text-secondary)" }}>
               {loading ? "Loading..." : `${orders.length} showing${total ? ` • ${total} total` : ""}`}
             </p>
           </div>
 
           <div className="flex items-center gap-2">
             <FormSelect<PageSizeForm>
-                control={control}
-                name="size"
-                placeholder="Rows per page"
-                className="h-10 rounded-xl border bg-white px-3 text-sm"
-                options={[5, 10, 20, 50].map((n) => ({
-                  value: String(n),
-                  label: `${n} / page`,
-                }))}
-              />
+              control={control}
+              name="size"
+              placeholder="Rows per page"
+              className="h-10 rounded-xl px-3 text-sm"
+              options={[5, 10, 20, 50].map((n) => ({
+                value: String(n),
+                label: `${n} / page`,
+              }))}
+            />
             <button
               onClick={load}
-              className="rounded-xl border bg-white px-4 py-2 text-sm font-semibold text-gray-800 shadow-sm hover:bg-gray-100"
+              className="rounded-xl px-4 py-2 text-sm font-semibold transition-colors"
+              style={{
+                backgroundColor: "var(--bg-secondary)",
+                border: "1px solid var(--border-strong)",
+                color: "var(--text-primary)",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--bg-elevated)")}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "var(--bg-secondary)")}
             >
               Refresh
             </button>
@@ -145,57 +152,88 @@ useEffect(() => {
         </div>
 
         {err ? (
-          <div className="mt-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          <div
+            className="mt-6 rounded-2xl p-4 text-sm"
+            style={{
+              border: "1px solid rgba(225, 83, 83, 0.3)",
+              backgroundColor: "rgba(225, 83, 83, 0.08)",
+              color: "#E57373",
+            }}
+          >
             {err}
           </div>
         ) : null}
 
         <div className="mt-6 space-y-3">
-         {loading ? (
-  <div className="space-y-3">
-    {[...Array(5)].map((_, i) => (
-      <OrderCardSkeleton key={i} />
-    ))}
-  </div>
-): orders.length === 0 ? (
-            <div className="rounded-2xl border bg-white p-8 text-center">
-              <p className="text-sm text-gray-600">No assigned orders found.</p>
+          {loading ? (
+            <div className="space-y-3">
+              {[...Array(5)].map((_, i) => (
+                <OrderCardSkeleton key={i} />
+              ))}
+            </div>
+          ) : orders.length === 0 ? (
+            <div
+              className="rounded-2xl p-8 text-center"
+              style={{
+                backgroundColor: "var(--bg-secondary)",
+                border: "1px solid var(--border-subtle)",
+              }}
+            >
+              <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
+                No delivered orders found.
+              </p>
             </div>
           ) : (
             orders.map((o) => (
               <Link
                 key={o._id}
                 href={`/driver/orders/${o._id}`}
-                className="block rounded-2xl border bg-white p-5 shadow-sm transition hover:shadow"
+                className="block rounded-2xl p-5 transition-colors"
+                style={{
+                  backgroundColor: "var(--bg-secondary)",
+                  border: "1px solid var(--border-subtle)",
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "var(--bg-elevated)")}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "var(--bg-secondary)")}
               >
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div className="min-w-[240px]">
-                    <p className="text-sm text-gray-500">Order ID</p>
-                    <p className="font-semibold text-gray-900">{o._id}</p>
-                    <p className="mt-1 text-xs text-gray-500">{fmtDate(o.createdAt)}</p>
+                    <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
+                      Order ID
+                    </p>
+                    <p className="font-semibold" style={{ color: "var(--text-primary)" }}>
+                      {o._id}
+                    </p>
+                    <p className="mt-1 text-xs" style={{ color: "var(--text-secondary)" }}>
+                      {fmtDate(o.createdAt)}
+                    </p>
                   </div>
 
                   <div className="flex flex-wrap items-center gap-2">
-                      <OrderStatusPill type="order" value={o.status} />
-                      <OrderStatusPill type="payment" value={o.paymentStatus} />
-
+                    <OrderStatusPill type="order" value={o.status} />
+                    <OrderStatusPill type="payment" value={o.paymentStatus} />
                   </div>
 
                   <div className="text-right">
-                    <p className="text-sm text-gray-500">Total</p>
-                    <p className="text-lg font-bold text-gray-900">{money(o.total)}</p>
-                    <p className="text-xs text-gray-500">
-                      Items:{" "}
-                      {o.items?.reduce((sum, it) => sum + (it.quantity || 0), 0) || 0}
+                    <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
+                      Total
+                    </p>
+                    <p className="text-lg font-bold" style={{ color: "var(--gold-primary)" }}>
+                      {money(o.total)}
+                    </p>
+                    <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
+                      Items: {o.items?.reduce((sum, it) => sum + (it.quantity || 0), 0) || 0}
                     </p>
                   </div>
                 </div>
 
-                <div className="mt-3 text-sm text-gray-700">
-                  <span className="font-semibold">Customer:</span>{" "}
+                <div className="mt-3 text-sm" style={{ color: "var(--text-secondary)" }}>
+                  <span className="font-semibold" style={{ color: "var(--text-primary)" }}>
+                    Customer:
+                  </span>{" "}
                   {o.shippingAddress?.userName || "—"}{" "}
                   {o.shippingAddress?.phone ? `• ${o.shippingAddress.phone}` : ""}
-                  <div className="text-xs text-gray-500">
+                  <div className="text-xs" style={{ color: "var(--text-secondary)" }}>
                     {[
                       o.shippingAddress?.address1,
                       o.shippingAddress?.city,
@@ -213,25 +251,35 @@ useEffect(() => {
         {/* Pagination */}
         <div className="mt-6 flex items-center justify-between gap-2">
           <button
-            className="rounded-xl border bg-white px-4 py-2 text-sm font-semibold text-gray-800 shadow-sm hover:bg-gray-100 disabled:opacity-50"
+            className="rounded-xl px-4 py-2 text-sm font-semibold transition-colors disabled:opacity-50"
+            style={{
+              backgroundColor: "var(--bg-secondary)",
+              border: "1px solid var(--border-strong)",
+              color: "var(--text-primary)",
+            }}
             disabled={loading || page <= 1}
             onClick={() => setPage((p) => Math.max(1, p - 1))}
           >
             Prev
           </button>
 
-          <div className="text-sm text-gray-700">
-            Page <span className="font-semibold">{page}</span>
+          <div className="text-sm" style={{ color: "var(--text-secondary)" }}>
+            Page <span className="font-semibold" style={{ color: "var(--text-primary)" }}>{page}</span>
             {totalPages ? (
               <>
                 {" "}
-                of <span className="font-semibold">{totalPages}</span>
+                of <span className="font-semibold" style={{ color: "var(--text-primary)" }}>{totalPages}</span>
               </>
             ) : null}
           </div>
 
           <button
-            className="rounded-xl border bg-white px-4 py-2 text-sm font-semibold text-gray-800 shadow-sm hover:bg-gray-100 disabled:opacity-50"
+            className="rounded-xl px-4 py-2 text-sm font-semibold transition-colors disabled:opacity-50"
+            style={{
+              backgroundColor: "var(--bg-secondary)",
+              border: "1px solid var(--border-strong)",
+              color: "var(--text-primary)",
+            }}
             disabled={loading || (totalPages ? page >= totalPages : orders.length < size)}
             onClick={() => setPage((p) => p + 1)}
           >

@@ -4,15 +4,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
-
   ShoppingCart,
   Truck,
 } from "lucide-react";
 
-const driver_LINKS = [
+const DRIVER_LINKS = [
   { href: "/driver", label: "Dashboard", icon: LayoutDashboard },
   { href: "/driver/assigned", label: "Assigned", icon: ShoppingCart },
-  { href: "/driver/delivered", label: "Deliverd", icon: Truck },
+  { href: "/driver/delivered", label: "Delivered", icon: Truck },
 ];
 
 export default function Sidebar() {
@@ -23,45 +22,40 @@ export default function Sidebar() {
 
   return (
     <aside
-      className="A
-        w-20 xl:w-64
-        min-h-full
-        bg-white dark:bg-gray-900
-        border-r border-gray-200 dark:border-gray-800
-        flex flex-col
-      "
+      className="w-20 xl:w-64 min-h-full flex flex-col"
+      style={{ backgroundColor: "var(--bg-secondary)" }}
     >
       <nav className="flex flex-col gap-1 p-2">
-        {driver_LINKS.map((link) => {
+        {DRIVER_LINKS.map((link) => {
           const Icon = link.icon;
           const active = isActive(link.href);
 
-           return (
+          return (
             <Link
               key={link.href}
               href={link.href}
-              className={`
-                group flex items-center gap-3
-                px-3 py-2.5 rounded-lg
-                text-sm font-medium
-                transition-all
-                ${
-                  active
-                ? "bg-green-600 text-white shadow-sm"
-                : "text-gray-800 hover:bg-green-50"
-                }
-              `}
+              className="group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors"
+              style={
+                active
+                  ? {
+                      backgroundColor: "var(--gold-primary)",
+                      color: "var(--text-on-gold)",
+                      boxShadow: "0 4px 14px -4px rgba(201, 161, 93, 0.4)",
+                    }
+                  : { color: "var(--text-secondary)" }
+              }
+              onMouseEnter={(e) => {
+                if (!active) e.currentTarget.style.backgroundColor = "var(--bg-elevated)";
+              }}
+              onMouseLeave={(e) => {
+                if (!active) e.currentTarget.style.backgroundColor = "transparent";
+              }}
             >
-              {/* Icon */}
               <Icon
                 size={20}
-                className={`
-                  shrink-0
-                  ${active ? "text-current" : "text-gray-500 group-hover:text-gray-900 dark:group-hover:text-white"}
-                `}
+                className="shrink-0"
+                style={{ color: active ? "var(--text-on-gold)" : "var(--text-secondary)" }}
               />
-
-              {/* Label (hidden on compact mode) */}
               <span className="hidden xl:inline">{link.label}</span>
             </Link>
           );

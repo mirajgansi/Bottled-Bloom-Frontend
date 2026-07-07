@@ -29,7 +29,6 @@ export default function DriverDashboardPage({ user }: { user: any }) {
   const [activityType, setActivityType] = useState("—");
   const [activityOrderId, setActivityOrderId] = useState<string | null>(null);
 
-  // ✅ NEW: last 5 activities
   const [recentActivities, setRecentActivities] = useState<ActivityItem[]>([]);
 
   const ran = useRef(false);
@@ -74,7 +73,6 @@ export default function DriverDashboardPage({ user }: { user: any }) {
         const getOrderTime = (o: any) =>
           new Date(o.updatedAt || o.createdAt || 0).getTime();
 
-        // ---------- ✅ LAST ORDER (single) ----------
         const lastOrder = [...list]
           .filter((o: any) => o.createdAt || o.updatedAt)
           .sort((a: any, b: any) => getOrderTime(b) - getOrderTime(a))[0];
@@ -123,7 +121,6 @@ export default function DriverDashboardPage({ user }: { user: any }) {
 
         setRecentActivities(recent);
 
-        // driver name
         const detailRes: any = await getDriverDetail(driverId);
         const detail = detailRes?.data ?? detailRes;
         setDriverName(detail?.name || detail?.username || driverName);
@@ -138,15 +135,27 @@ export default function DriverDashboardPage({ user }: { user: any }) {
   }, [driverId, driverName]);
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen" style={{ backgroundColor: "var(--bg-primary)" }}>
       <div className="mx-auto max-w-6xl px-4 py-8">
-        <h1 className="text-2xl font-bold text-gray-900">
+        <h1
+          className="text-2xl font-bold"
+          style={{ color: "var(--text-primary)", fontFamily: "Georgia, serif" }}
+        >
           {loading ? "Loading..." : `Welcome, ${driverName}`}
         </h1>
-        <p className="mt-1 text-sm text-gray-600">{lastActivityLabel}</p>
+        <p className="mt-1 text-sm" style={{ color: "var(--text-secondary)" }}>
+          {lastActivityLabel}
+        </p>
 
         {err ? (
-          <div className="mt-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          <div
+            className="mt-6 rounded-2xl p-4 text-sm"
+            style={{
+              border: "1px solid rgba(225, 83, 83, 0.3)",
+              backgroundColor: "rgba(225, 83, 83, 0.08)",
+              color: "#E57373",
+            }}
+          >
             {err}
           </div>
         ) : null}
@@ -168,25 +177,39 @@ export default function DriverDashboardPage({ user }: { user: any }) {
           />
         </div>
 
-        {/* ✅ Last activity (single) */}
-        <div className="mt-6 rounded-2xl border bg-white p-5 shadow-sm">
-          <p className="text-sm font-semibold text-gray-800">My Last Activity</p>
+        {/* Last activity (single) */}
+        <div
+          className="mt-6 rounded-2xl p-5"
+          style={{
+            backgroundColor: "var(--bg-secondary)",
+            border: "1px solid var(--border-subtle)",
+          }}
+        >
+          <p className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+            My Last Activity
+          </p>
 
           <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="text-xs text-gray-500">Activity</p>
-              <p className="text-lg font-bold text-gray-900">{activityType}</p>
+              <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
+                Activity
+              </p>
+              <p className="text-lg font-bold" style={{ color: "var(--gold-primary)" }}>
+                {activityType}
+              </p>
 
-              <p className="mt-1 text-sm text-gray-600">
+              <p className="mt-1 text-sm" style={{ color: "var(--text-secondary)" }}>
                 {lastActivity === "—"
                   ? "No recent order activity found."
                   : lastActivity}
               </p>
 
               {activityOrderId ? (
-                <p className="mt-1 text-xs text-gray-500">
+                <p className="mt-1 text-xs" style={{ color: "var(--text-secondary)" }}>
                   Order:{" "}
-                  <span className="font-semibold">{activityOrderId}</span>
+                  <span className="font-semibold" style={{ color: "var(--text-primary)" }}>
+                    {activityOrderId}
+                  </span>
                 </p>
               ) : null}
             </div>
@@ -194,7 +217,12 @@ export default function DriverDashboardPage({ user }: { user: any }) {
             {activityOrderId ? (
               <a
                 href={`/driver/orders/${activityOrderId}`}
-                className="rounded-xl bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-black"
+                className="rounded-xl px-4 py-2 text-sm font-semibold transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]"
+                style={{
+                  backgroundColor: "var(--gold-primary)",
+                  color: "var(--text-on-gold)",
+                  boxShadow: "0 10px 30px -8px rgba(201, 161, 93, 0.4)",
+                }}
               >
                 View Order
               </a>
@@ -202,34 +230,52 @@ export default function DriverDashboardPage({ user }: { user: any }) {
           </div>
         </div>
 
-        {/* ✅ Last 5 activity list */}
-        <div className="mt-6 rounded-2xl border bg-white p-5 shadow-sm">
-          <p className="text-sm font-semibold text-gray-800">
+        {/* Last 5 activity list */}
+        <div
+          className="mt-6 rounded-2xl p-5"
+          style={{
+            backgroundColor: "var(--bg-secondary)",
+            border: "1px solid var(--border-subtle)",
+          }}
+        >
+          <p className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
             Recent Activity (Last 5)
           </p>
 
           {loading ? (
-            <p className="mt-3 text-sm text-gray-600">Loading activity...</p>
+            <p className="mt-3 text-sm" style={{ color: "var(--text-secondary)" }}>
+              Loading activity...
+            </p>
           ) : recentActivities.length ? (
             <ul className="mt-4 space-y-2">
               {recentActivities.map((a) => (
                 <li
                   key={a.orderId}
-                  className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-gray-50 px-4 py-3"
+                  className="flex flex-wrap items-center justify-between gap-3 rounded-xl px-4 py-3"
+                  style={{
+                    backgroundColor: "var(--bg-elevated)",
+                    border: "1px solid var(--border-subtle)",
+                  }}
                 >
                   <div>
-                    <p className="text-sm font-semibold text-gray-900">
+                    <p className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
                       {a.label}
                     </p>
-                    <p className="text-xs text-gray-600">{a.when}</p>
-                    <p className="text-xs text-gray-500">
-                      Order: <span className="font-semibold">{a.orderId}</span>
+                    <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
+                      {a.when}
+                    </p>
+                    <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
+                      Order:{" "}
+                      <span className="font-semibold" style={{ color: "var(--text-primary)" }}>
+                        {a.orderId}
+                      </span>
                     </p>
                   </div>
 
                   <a
                     href={`/driver/orders/${a.orderId}`}
-                    className="rounded-lg bg-gray-900 px-3 py-2 text-xs font-semibold text-white hover:bg-black"
+                    className="rounded-lg px-3 py-2 text-xs font-semibold transition-transform duration-200 hover:scale-[1.02]"
+                    style={{ backgroundColor: "var(--gold-primary)", color: "var(--text-on-gold)" }}
                   >
                     View
                   </a>
@@ -237,7 +283,7 @@ export default function DriverDashboardPage({ user }: { user: any }) {
               ))}
             </ul>
           ) : (
-            <p className="mt-3 text-sm text-gray-600">
+            <p className="mt-3 text-sm" style={{ color: "var(--text-secondary)" }}>
               No recent activity found.
             </p>
           )}
