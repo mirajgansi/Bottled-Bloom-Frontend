@@ -1,13 +1,11 @@
 import { handleWhoami } from "@/lib/actions/auth-actions";
-import { notFound } from "next/navigation";
 import DriverOrderDetailPage from "./components/orderDetail";
+import { redirect } from "next/navigation";
 
 export default async function Page() {
-    const result = await handleWhoami();
-    if(!result.success){
-        throw new Error("Error fetching user data")
-    }
-   
-      return <DriverOrderDetailPage />;
-
+  const result = await handleWhoami();
+  if (!result.success) {
+    redirect("/login");
+  }
+  return <DriverOrderDetailPage />;
 }

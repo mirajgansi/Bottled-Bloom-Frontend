@@ -25,42 +25,50 @@ export default function RegisterForm() {
   const [pending, startTransition] = useTransition();
 
   const onSubmit = async (data: RegisterData) => {
-    try {
-      const result = await handleRegister(data);
+  try {
+    const result = await handleRegister(data);
 
-      if (!result) {
+    if (!result) {
+      setError("root", {
+        type: "manual",
+        message: "No response from server. Please try again.",
+      });
+      return;
+    }
+
+    if (!result.success) {
+      // Rate limiting (Fix 4) — status 429, don't attribute to a specific field
+      if ("status" in result && result.status === 429) {
         setError("root", {
           type: "manual",
-          message: "No response from server. Please try again.",
+          message: "Too many attempts. Please wait a few minutes and try again.",
         });
         return;
       }
 
-      if (!result.success) {
-        const msg = (result.message || "").toLowerCase();
-
-        if (msg.includes("username")) {
-          setError("username", { type: "manual", message: result.message });
-          return;
-        }
-
-        if (msg.includes("email")) {
-          setError("email", { type: "manual", message: result.message });
-          return;
-        }
-
-        setError("root", { type: "manual", message: result.message || "Registration failed" });
+      // Field-specific conflict (email/username already in use) — driven by
+      // the backend's `field` key, not by guessing from message text
+      if (result.field === "username" || result.field === "email") {
+        setError(result.field, { type: "manual", message: result.message });
         return;
       }
 
-      router.push("/login");
-    } catch (e: any) {
+      // Fallback: validation errors or anything else the backend didn't tag
       setError("root", {
         type: "manual",
-        message: e?.message || "Something went wrong",
+        message: result.message || "Registration failed",
       });
+      return;
     }
-  };
+
+    router.push("/login");
+  } catch (e: any) {
+    setError("root", {
+      type: "manual",
+      message: e?.message || "Something went wrong",
+    });
+  }
+};
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
