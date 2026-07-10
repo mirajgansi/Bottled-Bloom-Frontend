@@ -9,6 +9,7 @@ export const API = {
     VERIFY_RESET_CODE: "/api/auth/verify-reset-code",
     RESET_PASSWORD: `/api/auth/reset-password`,
     DELETEME: "/api/auth/me",
+    VERIFY_LOGIN_OTP: "/api/auth/verify-login-otp",
   },
   PRODUCT: {
     CREATE: "/api/products/",

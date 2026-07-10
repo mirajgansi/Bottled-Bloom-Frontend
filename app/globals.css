@@ -42,3 +42,10 @@ body {
   background-color: var(--bg-primary);
   color: var(--text-primary);
 }
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0px 1000px var(--your-input-bg) inset !important;
+  -webkit-text-fill-color: var(--your-text-color) !important;
+  transition: background-color 5000s ease-in-out 0s;
+}

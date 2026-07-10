@@ -29,7 +29,21 @@ export const login = async (data: any) => {
     };
   }
 };
-
+export const verifyLoginOtp = async (tempToken: string, code: string) => {
+  try {
+    const res = await axios.post(API.AUTH.VERIFY_LOGIN_OTP, {
+      tempToken,
+      code: code.trim(),
+    });
+    return res.data; // { success, message, data?, token? }
+  } catch (err: any) {
+    return {
+      success: false,
+      message:
+        err?.response?.data?.message || err?.message || "Verification failed",
+    };
+  }
+};
 export const whoami = async () => {
   try {
     const response = await axios.get(API.AUTH.WHOAMI);

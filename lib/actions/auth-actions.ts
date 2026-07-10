@@ -10,6 +10,7 @@ import {
   resetPassword,
   deleteMe,
   verifyResetCode,
+  verifyLoginOtp,
 } from "../api/auth";
 import { setAuthToken, setUserData } from "../cookie";
 import { revalidatePath } from "next/cache";
@@ -43,25 +44,84 @@ export async function handleRegister(formData: any) {
   }
 }
 
-export async function handleLogin(formData: any) {
+export type LoginActionResult =
+  | { success: true; requiresOtp: true; tempToken: string; message?: string }
+  | { success: true; requiresOtp?: false; data: any; message?: string }
+  | { success: false; field?: string; message: string };
+
+export async function handleLogin(formData: any): Promise<LoginActionResult> {
   try {
     const result = await login(formData);
 
-    if (result?.success === true) {
+    if (!result || result.success !== true) {
+      return {
+        success: false,
+        field: result?.field,
+        message: result?.message || "Invalid email or password",
+      };
+    }
+
+    // ✅ Step 1: password correct, OTP sent — do NOT set any session cookie yet
+    if (result.requiresOtp && result.tempToken) {
+      return {
+        success: true,
+        requiresOtp: true,
+        tempToken: result.tempToken,
+        message: result.message || "Verification code sent to your email",
+      };
+    }
+
+    // Fallback: OTP disabled server-side, backend returned a real session directly
+    if (result.data && result.token) {
       await setUserData(result.data);
       await setAuthToken(result.token);
 
       return {
         success: true,
-        message: "Login successful",
+        requiresOtp: false,
         data: result.data,
+        message: "Login successful",
+      };
+    }
+
+    // Defensive: shouldn't happen, but avoids setting cookies to undefined
+    return {
+      success: false,
+      message: "Unexpected response from server",
+    };
+  } catch (err: any) {
+    return {
+      success: false,
+      message: err?.message || "Server error. Please try again.",
+    };
+  }
+}
+
+export type VerifyOtpActionResult =
+  | { success: true; data: any; message?: string }
+  | { success: false; message: string };
+
+export async function handleVerifyLoginOtp(
+  tempToken: string,
+  code: string,
+): Promise<VerifyOtpActionResult> {
+  try {
+    const data = await verifyLoginOtp(tempToken, code); // already parsed JSON via axios
+
+    if (data?.success && data?.token) {
+      await setUserData(data.data);
+      await setAuthToken(data.token);
+
+      return {
+        success: true,
+        message: "Login successful",
+        data: data.data,
       };
     }
 
     return {
       success: false,
-      field: result?.field,
-      message: result?.message || "Invalid email or password",
+      message: data?.message || "Invalid or expired code",
     };
   } catch (err: any) {
     return {
