@@ -35,14 +35,14 @@ const OnBoarding = () => {
             boxShadow: 'var(--shadow-glow), var(--shadow-deep)',
           }}
         >
-          <Image
-            src="/perfume.jpg"
-            width={220}
-            height={320}
-            alt="Bottled Bloom signature fragrance"
-            className="object-cover"
-            priority
-          />
+        <Image
+  src="/perfume.jpg"
+  width={220}
+  height={320}
+  alt="Bottled Bloom signature fragrance"
+  className="object-cover w-[220px] h-[320px]"
+  priority
+/>
         </div>
 
         {/* gold divider icon (svg, not emoji) */}

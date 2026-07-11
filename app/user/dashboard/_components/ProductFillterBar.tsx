@@ -57,32 +57,7 @@ export default function ProductFilterBar({ onSubmit }: ProductFilterBarProps) {
           />
         </div>
 
-        {/* Category */}
-        <div className="relative w-full md:w-90">
-          <LayoutGrid
-            className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 pointer-events-none"
-            style={{ color: "var(--text-secondary)" }}
-          />
-          <select
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            className="w-full rounded-lg pl-10 pr-4 py-2 outline-none transition-colors appearance-none"
-            style={{
-              backgroundColor: "var(--bg-elevated)",
-              color: "var(--text-primary)",
-              border: "1px solid var(--border-strong)",
-            }}
-            onFocus={(e) => (e.currentTarget.style.borderColor = "var(--gold-bright)")}
-            onBlur={(e) => (e.currentTarget.style.borderColor = "var(--border-strong)")}
-          >
-            <option value="all">All Categories</option>
-            {CATEGORIES.map((c) => (
-              <option key={c.slug} value={c.slug}>
-                {c.label}
-              </option>
-            ))}
-          </select>
-        </div>
+      
 
         {/* Button */}
         <button

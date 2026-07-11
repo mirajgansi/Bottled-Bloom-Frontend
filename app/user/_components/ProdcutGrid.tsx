@@ -104,52 +104,51 @@ export default function ProductsGrid({
     return Array.isArray(list) ? list : [];
   };
 
-  const fetchProducts = async () => {
-    setLoading(true);
-    setError(null);
+ const fetchProducts = async () => {
+  setLoading(true);
+  setError(null);
 
-    try {
-      let res: any;
+  try {
+    let res: any;
 
-      if (mode === "favorites") res = await loadFavorites();
-      else if (mode === "prefetched") res = await loadPrefetched();
-      else res = await loadAll();
+    if (mode === "favorites") res = await loadFavorites();
+    else if (mode === "prefetched") res = await loadPrefetched();
+    else res = await loadAll();
 
-      const safe = normalizeList(res);
+    const safe = normalizeList(res);
+    setProducts(safe);
 
-      // favorites page: API returns products directly, keep them
-      setProducts(safe);
-
-      // Load favorites map once per mount (like cart), so hearts are correct everywhere
-      if (!favLoaded) {
+    // ✅ favorites map is best-effort — its failure must never affect
+    // the already-successfully-loaded product list
+    if (!favLoaded) {
+      try {
         const favMap = await loadFavoritesMap();
         setFavorites(favMap);
+      } catch {
+        // silently degrade — hearts just won't be pre-filled this load
+      } finally {
         setFavLoaded(true);
       }
-
-      // ✅ If backend returned isFavorite, merge it too (optional)
-      setFavorites((prev) => {
-        const next = { ...prev };
-
-        // in favorites mode, force them true
-        if (mode === "favorites") {
-          for (const p of safe) next[p._id] = true;
-        }
-
-        // merge isFavorite if present
-        for (const p of safe) {
-          if (typeof p.isFavorite === "boolean") next[p._id] = p.isFavorite;
-        }
-
-        return next;
-      });
-    } catch (e: any) {
-      setError(e?.message || "Failed to load products");
-      setProducts([]);
-    } finally {
-      setLoading(false);
     }
-  };
+
+    setFavorites((prev) => {
+      const next = { ...prev };
+      if (mode === "favorites") {
+        for (const p of safe) next[p._id] = true;
+      }
+      for (const p of safe) {
+        if (typeof p.isFavorite === "boolean") next[p._id] = p.isFavorite;
+      }
+      return next;
+    });
+  } catch (e: any) {
+    // this catch now only fires for failures in the PRIMARY product fetch
+    setError(e?.message || "Failed to load products");
+    setProducts([]);
+  } finally {
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
     fetchProducts();
