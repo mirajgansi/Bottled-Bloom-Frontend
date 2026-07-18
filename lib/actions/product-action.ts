@@ -43,34 +43,21 @@ export const handleCreateProduct = async (data: FormData) => {
     };
   }
 };
-export const handleGetAllProducts = async (params?: {
+export async function handleGetAllProducts(params: {
   page?: number;
   size?: number;
   search?: string;
-}) => {
+  category?: string;
+}) {
   try {
-    const response = await getAllProduct(params);
-
-    if (response.success) {
-      return {
-        success: true,
-        message: "All products fetched successfully",
-        products: response.data.products ?? response.data,
-        pagination: response.data.pagination,
-      };
-    }
-
-    return {
-      success: false,
-      message: response.message || "Failed to fetch products",
-    };
-  } catch (error: any) {
-    return {
-      success: false,
-      message: error.message || "Failed to fetch products",
-    };
+    const result = await getAllProduct(params);
+    // result = { success, message, data: { products, pagination } }
+    return { success: true, data: result.data };
+  } catch (err: any) {
+    return { success: false, message: err.message };
   }
-};
+}
+
 export const handleGetProductById = async (id: string) => {
   try {
     if (!id) return { success: false, message: "Missing product id" };

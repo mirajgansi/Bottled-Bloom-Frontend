@@ -1,4 +1,3 @@
-import axiosInstance from "./axios";
 import axios from "./axios";
 import { API } from "./endpoint";
 
@@ -37,7 +36,7 @@ export const getAllProduct = async (params?: {
   }
 };
 export const getMyFavoriteProducts = async () => {
-  const res = await axiosInstance.get(API.PRODUCT.FAVORITES_ME, {
+  const res = await axios.get(API.PRODUCT.FAVORITES_ME, {
     withCredentials: true,
   });
   return res.data;
@@ -45,7 +44,7 @@ export const getMyFavoriteProducts = async () => {
 export const getProductById = async (id: string) => {
   if (!id) throw new Error("Product id is required");
   try {
-    const response = await axiosInstance.get(API.PRODUCT.GET_ONE(id));
+    const response = await axios.get(API.PRODUCT.GET_ONE(id));
     return response.data;
   } catch (error: any) {
     throw new Error(
@@ -59,7 +58,7 @@ export const getProductById = async (id: string) => {
 // UPDATE PRODUCT (JSON body)
 export const updateProduct = async (id: string, payload: any) => {
   try {
-    const response = await axiosInstance.put(API.PRODUCT.UPDATE(id), payload, {
+    const response = await axios.put(API.PRODUCT.UPDATE(id), payload, {
       headers: {
         "Content-Type": "multipart/form-data", //for file upload/multer
       },
@@ -190,7 +189,7 @@ export const rateProduct = async (id: string, payload: { rating: number }) => {
   if (!id) throw new Error("Product id is required");
 
   try {
-    const response = await axiosInstance.post(API.PRODUCT.RATE(id), payload, {
+    const response = await axios.post(API.PRODUCT.RATE(id), payload, {
       withCredentials: true,
     });
     return response.data;
@@ -205,7 +204,7 @@ export const toggleFavoriteProduct = async (id: string) => {
   if (!id) throw new Error("Product id is required");
 
   try {
-    const response = await axiosInstance.post(
+    const response = await axios.post(
       API.PRODUCT.FAVORITE_TOGGLE(id),
       {},
       { withCredentials: true },
@@ -227,11 +226,9 @@ export const addProductComment = async (
   if (!id) throw new Error("Product id is required");
 
   try {
-    const response = await axiosInstance.post(
-      API.PRODUCT.ADD_COMMENT(id),
-      payload,
-      { withCredentials: true },
-    );
+    const response = await axios.post(API.PRODUCT.ADD_COMMENT(id), payload, {
+      withCredentials: true,
+    });
     return response.data;
   } catch (error: any) {
     throw new Error(

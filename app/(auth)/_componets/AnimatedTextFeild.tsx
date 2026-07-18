@@ -59,7 +59,7 @@ export default function AnimatedTextField({
             showToggle ? "pr-10" : "",
             error
               ? "border-red-500 bg-red-50"
-              : "border-black/10 focus:border-black/40",
+  : "border-black/10 focus:border-black/40",
             inputClassName,
           ].join(" ")}
         />

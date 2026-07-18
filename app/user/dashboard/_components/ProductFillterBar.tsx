@@ -2,7 +2,6 @@
 
 import { Search, LayoutGrid } from "lucide-react";
 import { useState } from "react";
-import { CATEGORIES } from "@/lib/categories";
 
 type ProductFilterBarProps = {
   onSubmit: (payload: { search: string; category: string }) => void;

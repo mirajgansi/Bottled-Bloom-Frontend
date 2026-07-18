@@ -24,7 +24,7 @@ export default function AllProductsPage() {
         />
       </div>
   <div className="mt-6">
-          <ProductsGrid title="" pageSize={20} refreshMs={10000} />
+<ProductsGrid title="" pageSize={20}  />
         </div>
       </div>
 </div>
